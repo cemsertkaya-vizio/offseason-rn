@@ -11,32 +11,32 @@ import { NavigationArrows } from '../components/NavigationArrows';
 import { UnderlineTextField } from '../components/UnderlineTextField';
 import { colors } from '../constants/colors';
 
-type RegisterCoreProfileScreenNavigationProp = NativeStackNavigationProp<
+type RegisterPhysicalInfoScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'RegisterCoreProfile'
+  'RegisterPhysicalInfo'
 >;
 
-interface RegisterCoreProfileScreenProps {
-  navigation: RegisterCoreProfileScreenNavigationProp;
+interface RegisterPhysicalInfoScreenProps {
+  navigation: RegisterPhysicalInfoScreenNavigationProp;
 }
 
-export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps> = ({
+export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProps> = ({
   navigation,
 }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('RegisterCoreProfileScreen - Next pressed');
-    navigation.navigate('RegisterPhysicalInfo');
+    console.log('RegisterPhysicalInfoScreen - Next pressed');
   };
 
-  const isNextDisabled = !firstName.trim() || !lastName.trim() || !phoneNumber.trim();
+  const isNextDisabled = !height.trim() || !weight.trim() || !age.trim() || !gender.trim();
 
   return (
     <View style={styles.container}>
@@ -49,24 +49,33 @@ export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps>
 
         <View style={styles.inputsWrapper}>
           <UnderlineTextField
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={setFirstName}
+            placeholder="Height"
+            value={height}
+            onChangeText={setHeight}
+            keyboardType="numeric"
             style={styles.textField}
           />
 
           <UnderlineTextField
-            placeholder="Last Name"
-            value={lastName}
-            onChangeText={setLastName}
+            placeholder="Weight"
+            value={weight}
+            onChangeText={setWeight}
+            keyboardType="numeric"
             style={styles.textField}
           />
 
           <UnderlineTextField
-            placeholder="Phone Number"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
+            placeholder="Age"
+            value={age}
+            onChangeText={setAge}
+            keyboardType="numeric"
+            style={styles.textField}
+          />
+
+          <UnderlineTextField
+            placeholder="Gender"
+            value={gender}
+            onChangeText={setGender}
             style={styles.textField}
           />
         </View>

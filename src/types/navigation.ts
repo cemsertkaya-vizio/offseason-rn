@@ -3,5 +3,6 @@ export type RootStackParamList = {
   Register: undefined;
   CoreProfile: undefined;
   RegisterCoreProfile: undefined;
+  RegisterPhysicalInfo: undefined;
 };
 
