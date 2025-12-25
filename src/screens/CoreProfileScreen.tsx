@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { Button } from '../components';
+import { BackgroundImageSection } from '../components/BackgroundImageSection';
 import { colors } from '../constants/colors';
 
 type CoreProfileScreenNavigationProp = NativeStackNavigationProp<
@@ -27,6 +27,7 @@ export const CoreProfileScreen: React.FC<CoreProfileScreenProps> = ({ navigation
 
   const handleLetsGo = () => {
     console.log('CoreProfileScreen - Let\'s Go pressed');
+    navigation.navigate('RegisterCoreProfile');
   };
 
   const handleTermsPress = () => {
@@ -35,20 +36,9 @@ export const CoreProfileScreen: React.FC<CoreProfileScreenProps> = ({ navigation
 
   return (
     <View style={styles.container}>
-      <View style={styles.imageContainer}>
-        <ImageBackground
-          source={require('../assets/coach-background.png')}
-          style={styles.backgroundImage}
-          resizeMode="cover">
-          <LinearGradient
-            colors={['rgba(0, 0, 0, 0.1)', colors.darkBrown]}
-            locations={[0, 1]}
-            start={{x: 0, y: 0}}
-            end={{x: 0, y: 1}}
-            style={styles.gradientOverlay}
-          />
-        </ImageBackground>
-      </View>
+      <BackgroundImageSection
+        source={require('../assets/coach-background.png')}
+      />
 
       <View style={styles.content}>
         <View style={styles.chatContainer}>
@@ -106,18 +96,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
-  },
-  imageContainer: {
-    width: '100%',
-    height: 349,
-    overflow: 'hidden',
-  },
-  backgroundImage: {
-    width: '100%',
-    height: '100%',
-  },
-  gradientOverlay: {
-    ...StyleSheet.absoluteFillObject,
   },
   content: {
     flex: 1,
