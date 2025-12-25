@@ -26,7 +26,7 @@ interface StartScreenProps {
 export const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
   const handleGetStarted = () => {
     console.log('StartScreen - Get Started pressed');
-    navigation.navigate('Register');
+    navigation.navigate('CoreProfile');
   };
 
   const handleLogIn = () => {
