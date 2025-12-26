@@ -65,6 +65,7 @@ export const RegisterPreferredDaysScreen: React.FC<RegisterPreferredDaysScreenPr
 
   const handleNext = () => {
     console.log('RegisterPreferredDaysScreen - Next pressed with preferred days:', preferredDays);
+    navigation.navigate('Weightlifting');
   };
 
   const toggleDay = (activity: string, dayId: string) => {
