@@ -17,37 +17,54 @@ import { colors } from '../../constants/colors';
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
 
-type WeightliftingScreenNavigationProp = NativeStackNavigationProp<
+type WeightliftingEquipmentScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'Weightlifting'
+  'WeightliftingEquipment'
 >;
 
-interface WeightliftingScreenProps {
-  navigation: WeightliftingScreenNavigationProp;
+interface WeightliftingEquipmentScreenProps {
+  navigation: WeightliftingEquipmentScreenNavigationProp;
 }
 
-type TrainingStyle = 'fullBody' | 'muscleGroups' | null;
-
-const OPTIONS = [
-  { id: 'fullBody' as const, label: 'I like to hit full body.' },
-  { id: 'muscleGroups' as const, label: 'I like to prioritize muscle groups.' },
+const EQUIPMENT_OPTIONS = [
+  { id: 'barbells', label: 'Barbells & plates' },
+  { id: 'dumbells', label: 'Dumbells' },
+  { id: 'kettlebells', label: 'Kettlebells' },
+  { id: 'liftingMachines', label: 'Lifting machines' },
+  { id: 'cableMachines', label: 'Cable machines' },
+  { id: 'none', label: 'None' },
 ];
 
-export const WeightliftingScreen: React.FC<WeightliftingScreenProps> = ({
+export const WeightliftingEquipmentScreen: React.FC<WeightliftingEquipmentScreenProps> = ({
   navigation,
 }) => {
-  const [selectedStyle, setSelectedStyle] = useState<TrainingStyle>(null);
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('WeightliftingScreen - Next pressed with style:', selectedStyle);
-    navigation.navigate('WeightliftingEquipment');
+    console.log('WeightliftingEquipmentScreen - Next pressed with equipment:', selectedEquipment);
   };
 
-  const isNextDisabled = selectedStyle === null;
+  const toggleEquipment = (equipmentId: string) => {
+    setSelectedEquipment((prev) => {
+      if (equipmentId === 'none') {
+        return prev.includes('none') ? [] : ['none'];
+      }
+      const withoutNone = prev.filter((id) => id !== 'none');
+      if (withoutNone.includes(equipmentId)) {
+        return withoutNone.filter((id) => id !== equipmentId);
+      }
+      return [...withoutNone, equipmentId];
+    });
+  };
+
+  const isNextDisabled = selectedEquipment.length === 0;
+
+  const leftColumn = EQUIPMENT_OPTIONS.filter((_, index) => index % 2 === 0);
+  const rightColumn = EQUIPMENT_OPTIONS.filter((_, index) => index % 2 === 1);
 
   return (
     <View style={styles.container}>
@@ -73,30 +90,55 @@ export const WeightliftingScreen: React.FC<WeightliftingScreenProps> = ({
         <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
         <Text style={styles.question}>
-          Describe your typical weight training day.
+          What equipment do you have access to?
         </Text>
 
         <View style={styles.optionsContainer}>
-          {OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.optionButton,
-                selectedStyle === option.id && styles.optionButtonSelected,
-              ]}
-              onPress={() => setSelectedStyle(option.id)}
-              activeOpacity={0.7}
-            >
-              <Text
+          <View style={styles.column}>
+            {leftColumn.map((equipment) => (
+              <TouchableOpacity
+                key={equipment.id}
                 style={[
-                  styles.optionText,
-                  selectedStyle === option.id && styles.optionTextSelected,
+                  styles.optionButton,
+                  selectedEquipment.includes(equipment.id) && styles.optionButtonSelected,
                 ]}
+                onPress={() => toggleEquipment(equipment.id)}
+                activeOpacity={0.7}
               >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedEquipment.includes(equipment.id) && styles.optionTextSelected,
+                  ]}
+                >
+                  {equipment.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.column}>
+            {rightColumn.map((equipment) => (
+              <TouchableOpacity
+                key={equipment.id}
+                style={[
+                  styles.optionButton,
+                  selectedEquipment.includes(equipment.id) && styles.optionButtonSelected,
+                ]}
+                onPress={() => toggleEquipment(equipment.id)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedEquipment.includes(equipment.id) && styles.optionTextSelected,
+                  ]}
+                >
+                  {equipment.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
@@ -167,8 +209,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 42,
   },
   optionsContainer: {
-    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
     paddingHorizontal: 42,
+  },
+  column: {
+    flex: 1,
     gap: 16,
   },
   optionButton: {
@@ -177,7 +224,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 30,
+    paddingHorizontal: 12,
     paddingVertical: 11,
   },
   optionButtonSelected: {

@@ -9,5 +9,6 @@ export type RootStackParamList = {
   RegisterSchedule: { activities: string[] };
   RegisterPreferredDays: { activities: string[] };
   Weightlifting: undefined;
+  WeightliftingEquipment: undefined;
 };
 
