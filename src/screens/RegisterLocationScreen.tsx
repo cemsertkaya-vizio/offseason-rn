@@ -11,72 +11,45 @@ import { NavigationArrows } from '../components/NavigationArrows';
 import { UnderlineTextField } from '../components/UnderlineTextField';
 import { colors } from '../constants/colors';
 
-type RegisterPhysicalInfoScreenNavigationProp = NativeStackNavigationProp<
+type RegisterLocationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'RegisterPhysicalInfo'
+  'RegisterLocation'
 >;
 
-interface RegisterPhysicalInfoScreenProps {
-  navigation: RegisterPhysicalInfoScreenNavigationProp;
+interface RegisterLocationScreenProps {
+  navigation: RegisterLocationScreenNavigationProp;
 }
 
-export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProps> = ({
+export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
   navigation,
 }) => {
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
+  const [location, setLocation] = useState('');
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('RegisterPhysicalInfoScreen - Next pressed');
-    navigation.navigate('RegisterLocation');
+    console.log('RegisterLocationScreen - Next pressed');
   };
 
-  const isNextDisabled = !height.trim() || !weight.trim() || !age.trim() || !gender.trim();
+  const isNextDisabled = !location.trim();
 
   return (
     <View style={styles.container}>
       <BackgroundImageSection
-        source={require('../assets/coach-background.png')}
+        source={require('../assets/coach2-background.png')}
       />
 
       <View style={styles.content}>
-        <Text style={styles.title}>Let's get you in the game.</Text>
+        <Text style={styles.title}>what city are you in?</Text>
+        <Text style={styles.subtitle}>We'll connect you with what's around.</Text>
 
         <View style={styles.inputsWrapper}>
           <UnderlineTextField
-            placeholder="Height"
-            value={height}
-            onChangeText={setHeight}
-            keyboardType="numeric"
-            style={styles.textField}
-          />
-
-          <UnderlineTextField
-            placeholder="Weight"
-            value={weight}
-            onChangeText={setWeight}
-            keyboardType="numeric"
-            style={styles.textField}
-          />
-
-          <UnderlineTextField
-            placeholder="Age"
-            value={age}
-            onChangeText={setAge}
-            keyboardType="numeric"
-            style={styles.textField}
-          />
-
-          <UnderlineTextField
-            placeholder="Gender"
-            value={gender}
-            onChangeText={setGender}
+            placeholder="Neighborhood, City, State"
+            value={location}
+            onChangeText={setLocation}
             style={styles.textField}
           />
         </View>
@@ -109,11 +82,19 @@ const styles = StyleSheet.create({
     color: colors.offWhite,
     textAlign: 'center',
     lineHeight: 38.78,
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontFamily: 'Roboto',
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.white,
+    textAlign: 'center',
     marginBottom: 40,
   },
   inputsWrapper: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   textField: {
     marginBottom: 40,

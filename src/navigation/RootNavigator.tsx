@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen } from '../screens';
+import { StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen } from '../screens';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -17,6 +17,7 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="CoreProfile" component={CoreProfileScreen} />
       <Stack.Screen name="RegisterCoreProfile" component={RegisterCoreProfileScreen} />
       <Stack.Screen name="RegisterPhysicalInfo" component={RegisterPhysicalInfoScreen} />
+      <Stack.Screen name="RegisterLocation" component={RegisterLocationScreen} />
     </Stack.Navigator>
   );
 };

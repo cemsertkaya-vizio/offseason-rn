@@ -4,5 +4,6 @@ export type RootStackParamList = {
   CoreProfile: undefined;
   RegisterCoreProfile: undefined;
   RegisterPhysicalInfo: undefined;
+  RegisterLocation: undefined;
 };
 
