@@ -5,6 +5,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { RootStackParamList } from '../../types/navigation';
 import { BackgroundImageSection } from '../../components/BackgroundImageSection';
 import { NavigationArrows } from '../../components/NavigationArrows';
@@ -54,7 +55,14 @@ export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProp
         source={require('../../assets/coach-background.png')}
       />
 
-      <View style={styles.content}>
+      <KeyboardAwareScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        enableOnAndroid={true}
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Let's get you in the game.</Text>
 
         <View style={styles.inputsWrapper}>
@@ -85,7 +93,7 @@ export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProp
             style={styles.textField}
           />
         </View>
-      </View>
+      </KeyboardAwareScrollView>
 
       <NavigationArrows
         onBackPress={handleBack}
@@ -103,6 +111,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 49,
     paddingTop: 19,
     alignItems: 'center',
