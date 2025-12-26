@@ -8,8 +8,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { Button, TextInput, SocialButton } from '../components';
-import { colors } from '../constants/colors';
+import { Button, TextInput, SocialButton } from '../../components';
+import { colors } from '../../constants/colors';
 
 export const RegisterScreen: React.FC = () => {
   const [email, setEmail] = useState('');

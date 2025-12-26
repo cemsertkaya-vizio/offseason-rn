@@ -5,11 +5,11 @@ import {
   StyleSheet,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
-import { BackgroundImageSection } from '../components/BackgroundImageSection';
-import { NavigationArrows } from '../components/NavigationArrows';
-import { UnderlineTextField } from '../components/UnderlineTextField';
-import { colors } from '../constants/colors';
+import { RootStackParamList } from '../../types/navigation';
+import { BackgroundImageSection } from '../../components/BackgroundImageSection';
+import { NavigationArrows } from '../../components/NavigationArrows';
+import { UnderlineTextField } from '../../components/UnderlineTextField';
+import { colors } from '../../constants/colors';
 
 type RegisterLocationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,7 +38,7 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
   return (
     <View style={styles.container}>
       <BackgroundImageSection
-        source={require('../assets/coach2-background.png')}
+        source={require('../../assets/coach2-background.png')}
       />
 
       <View style={styles.content}>
