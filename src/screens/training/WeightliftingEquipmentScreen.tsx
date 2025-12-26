@@ -46,6 +46,7 @@ export const WeightliftingEquipmentScreen: React.FC<WeightliftingEquipmentScreen
 
   const handleNext = () => {
     console.log('WeightliftingEquipmentScreen - Next pressed with equipment:', selectedEquipment);
+    navigation.navigate('WeightliftingMaxes');
   };
 
   const toggleEquipment = (equipmentId: string) => {
