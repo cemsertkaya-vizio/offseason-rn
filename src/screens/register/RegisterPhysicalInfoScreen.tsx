@@ -8,7 +8,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { BackgroundImageSection } from '../../components/BackgroundImageSection';
 import { NavigationArrows } from '../../components/NavigationArrows';
-import { UnderlineTextField } from '../../components/UnderlineTextField';
+import { HeightPicker } from '../../components/HeightPicker';
+import { WeightInput } from '../../components/WeightInput';
+import { AgeInput } from '../../components/AgeInput';
+import { GenderPicker } from '../../components/GenderPicker';
 import { colors } from '../../constants/colors';
 
 type RegisterPhysicalInfoScreenNavigationProp = NativeStackNavigationProp<
@@ -23,10 +26,11 @@ interface RegisterPhysicalInfoScreenProps {
 export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProps> = ({
   navigation,
 }) => {
-  const [height, setHeight] = useState('');
+  const [height, setHeight] = useState<{ feet: number; inches: number } | null>(null);
   const [weight, setWeight] = useState('');
   const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
+  const [ageIsValid, setAgeIsValid] = useState(false);
+  const [gender, setGender] = useState<string | null>(null);
 
   const handleBack = () => {
     navigation.goBack();
@@ -37,7 +41,12 @@ export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProp
     navigation.navigate('RegisterLocation');
   };
 
-  const isNextDisabled = !height.trim() || !weight.trim() || !age.trim() || !gender.trim();
+  const isHeightValid = height !== null;
+  const isWeightValid = weight.trim() !== '' && parseInt(weight, 10) > 0;
+  const isAgeValid = age.trim() !== '' && ageIsValid;
+  const isGenderValid = gender !== null && gender !== '';
+
+  const isNextDisabled = !isHeightValid || !isWeightValid || !isAgeValid || !isGenderValid;
 
   return (
     <View style={styles.container}>
@@ -49,34 +58,30 @@ export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProp
         <Text style={styles.title}>Let's get you in the game.</Text>
 
         <View style={styles.inputsWrapper}>
-          <UnderlineTextField
-            placeholder="Height"
+          <HeightPicker
             value={height}
-            onChangeText={setHeight}
-            keyboardType="numeric"
+            onChange={setHeight}
             style={styles.textField}
           />
 
-          <UnderlineTextField
+          <WeightInput
             placeholder="Weight"
             value={weight}
             onChangeText={setWeight}
-            keyboardType="numeric"
             style={styles.textField}
           />
 
-          <UnderlineTextField
+          <AgeInput
             placeholder="Age"
             value={age}
             onChangeText={setAge}
-            keyboardType="numeric"
+            onValidationChange={setAgeIsValid}
             style={styles.textField}
           />
 
-          <UnderlineTextField
-            placeholder="Gender"
+          <GenderPicker
             value={gender}
-            onChangeText={setGender}
+            onChange={setGender}
             style={styles.textField}
           />
         </View>
@@ -116,7 +121,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   textField: {
-    marginBottom: 40,
+    marginBottom: 0,
   },
 });
 

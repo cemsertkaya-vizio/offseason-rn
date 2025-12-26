@@ -4,11 +4,13 @@ import {
   StyleSheet,
   TextInput as RNTextInput,
   TextInputProps,
+  ViewStyle,
 } from 'react-native';
 import { colors } from '../constants/colors';
 
-interface UnderlineTextFieldProps extends TextInputProps {
+interface UnderlineTextFieldProps extends Omit<TextInputProps, 'style'> {
   width?: number;
+  style?: ViewStyle;
 }
 
 export const UnderlineTextField: React.FC<UnderlineTextFieldProps> = ({
@@ -17,9 +19,9 @@ export const UnderlineTextField: React.FC<UnderlineTextFieldProps> = ({
   ...props
 }) => {
   return (
-    <View style={[styles.container, { width }]}>
+    <View style={[styles.container, { width }, style]}>
       <RNTextInput
-        style={[styles.textInput, { width }, style]}
+        style={[styles.textInput, { width }]}
         placeholderTextColor="rgba(248, 249, 250, 0.5)"
         {...props}
       />
@@ -56,4 +58,3 @@ const styles = StyleSheet.create({
     right: 0,
   },
 });
-

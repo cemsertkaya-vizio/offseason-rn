@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   textField: {
-    marginBottom: 40,
+    marginBottom: 0,
   },
 });
 
