@@ -24,8 +24,8 @@ export const NavigationArrows: React.FC<NavigationArrowsProps> = ({
           disabled={backDisabled}
           activeOpacity={0.7}>
           <View style={styles.arrowLeft}>
-            <View style={styles.arrowLine} />
             <View style={[styles.arrowHead, styles.arrowHeadLeft]} />
+            <View style={styles.arrowLine} />
           </View>
         </TouchableOpacity>
 
@@ -76,7 +76,6 @@ const styles = StyleSheet.create({
   arrowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    transform: [{ rotate: '180deg' }],
   },
   arrowRight: {
     flexDirection: 'row',
@@ -98,7 +97,7 @@ const styles = StyleSheet.create({
     borderRightColor: colors.darkBrown,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    marginLeft: -1,
+    marginRight: -1,
   },
   arrowHeadRight: {
     borderLeftWidth: 6,
