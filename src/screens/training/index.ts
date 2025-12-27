@@ -6,4 +6,5 @@ export * from './SwimmingStyleScreen';
 export * from './SwimmingExampleScreen';
 export * from './PilatesScreen';
 export * from './PilatesStudioScreen';
+export * from './OtherScreen';
 
