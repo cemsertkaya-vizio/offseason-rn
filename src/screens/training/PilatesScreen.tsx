@@ -45,7 +45,12 @@ export const PilatesScreen: React.FC<PilatesScreenProps> = ({
 
   const handleNext = () => {
     console.log('PilatesScreen - Next pressed with membership:', selectedMembership);
-    // navigation.navigate('NextScreen'); // Navigate to next screen when ready
+    if (selectedMembership === 'yes') {
+      navigation.navigate('PilatesStudio');
+    } else {
+      // For other options, navigate to a different screen or complete the flow
+      console.log('No studio membership - proceeding to next step');
+    }
   };
 
   const isNextDisabled = selectedMembership === null;
