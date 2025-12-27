@@ -14,5 +14,6 @@ export type RootStackParamList = {
   Swimming: undefined;
   SwimmingStyle: undefined;
   SwimmingExample: undefined;
+  Pilates: undefined;
 };
 
