@@ -11,5 +11,8 @@ export type RootStackParamList = {
   Weightlifting: undefined;
   WeightliftingEquipment: undefined;
   WeightliftingMaxes: undefined;
+  Swimming: undefined;
+  SwimmingStyle: undefined;
+  SwimmingExample: undefined;
 };
 
