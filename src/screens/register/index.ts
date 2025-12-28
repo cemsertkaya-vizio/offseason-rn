@@ -6,4 +6,6 @@ export * from './RegisterPreferencesScreen';
 export * from './RegisterScheduleScreen';
 export * from './RegisterPreferredDaysScreen';
 export * from './RegisterGoalsScreen';
+export * from './RegisterGetStrongerScreen';
+export * from './RegisterGetStrongerDetailsScreen';
 

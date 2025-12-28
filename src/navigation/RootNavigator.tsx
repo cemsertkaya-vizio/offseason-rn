@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterGoalsScreen } from '../screens';
+import { StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen } from '../screens';
 import { WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
 import { RootStackParamList } from '../types/navigation';
 
@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="RegisterGoals"
+      initialRouteName="RegisterGetStronger"
       screenOptions={{
         headerShown: false,
       }}>
@@ -20,6 +20,8 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="RegisterPhysicalInfo" component={RegisterPhysicalInfoScreen} />
       <Stack.Screen name="RegisterLocation" component={RegisterLocationScreen} />
       <Stack.Screen name="RegisterGoals" component={RegisterGoalsScreen} />
+      <Stack.Screen name="RegisterGetStronger" component={RegisterGetStrongerScreen} />
+      <Stack.Screen name="RegisterGetStrongerDetails" component={RegisterGetStrongerDetailsScreen} />
       <Stack.Screen name="Swimming" component={SwimmingScreen} />
       <Stack.Screen name="SwimmingStyle" component={SwimmingStyleScreen} />
       <Stack.Screen name="SwimmingExample" component={SwimmingExampleScreen} />
