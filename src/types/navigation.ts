@@ -19,6 +19,7 @@ export type RootStackParamList = {
   RegisterTrainEventDetails: { eventType: string };
   RegisterTrainEventTrainingStatus: { eventType: string; eventMonth: string; eventYear: number };
   RegisterTrainEventCurrentStatus: { eventType: string; eventMonth: string; eventYear: number };
+  RegisterSummaryReview: undefined;
   Weightlifting: undefined;
   WeightliftingEquipment: undefined;
   WeightliftingMaxes: undefined;

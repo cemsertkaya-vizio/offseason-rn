@@ -45,6 +45,7 @@ export const RegisterGetStrongerDetailsScreen: React.FC<RegisterGetStrongerDetai
     } else {
       console.log('RegisterGetStrongerDetailsScreen - Specific goal:', specificGoal);
     }
+    navigation.navigate('RegisterSummaryReview');
   };
 
   const handleSkipGoal = () => {

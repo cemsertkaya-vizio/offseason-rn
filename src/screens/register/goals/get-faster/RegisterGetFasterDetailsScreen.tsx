@@ -59,6 +59,7 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
       seconds,
       unit: distanceUnit,
     });
+    navigation.navigate('RegisterSummaryReview');
   };
 
   return (

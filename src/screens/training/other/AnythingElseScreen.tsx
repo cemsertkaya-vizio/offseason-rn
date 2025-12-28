@@ -35,8 +35,7 @@ export const AnythingElseScreen: React.FC<AnythingElseScreenProps> = ({ navigati
 
   const handleNext = () => {
     console.log('AnythingElseScreen - Next pressed with info:', additionalInfo);
-    // Navigate to the next screen in the flow
-    // navigation.navigate('NextScreen');
+    navigation.navigate('RegisterSummaryReview');
   };
 
   const isNextDisabled = additionalInfo.trim() === '';

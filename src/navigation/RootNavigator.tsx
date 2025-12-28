@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen, RegisterGetFasterScreen, RegisterGetFasterDetailsScreen, RegisterGainMuscleScreen, RegisterGainMuscleDetailsScreen, RegisterTrainEventScreen, RegisterTrainEventDetailsScreen, RegisterTrainEventTrainingStatusScreen, RegisterTrainEventCurrentStatusScreen } from '../screens';
+import { StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen, RegisterGetFasterScreen, RegisterGetFasterDetailsScreen, RegisterGainMuscleScreen, RegisterGainMuscleDetailsScreen, RegisterTrainEventScreen, RegisterTrainEventDetailsScreen, RegisterTrainEventTrainingStatusScreen, RegisterTrainEventCurrentStatusScreen, RegisterSummaryReviewScreen } from '../screens';
 import { WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
 import { RootStackParamList } from '../types/navigation';
 
@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="RegisterTrainEvent"
+      initialRouteName="RegisterSummaryReview"
       screenOptions={{
         headerShown: false,
       }}>
@@ -30,6 +30,7 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="RegisterTrainEventDetails" component={RegisterTrainEventDetailsScreen} />
       <Stack.Screen name="RegisterTrainEventTrainingStatus" component={RegisterTrainEventTrainingStatusScreen} />
       <Stack.Screen name="RegisterTrainEventCurrentStatus" component={RegisterTrainEventCurrentStatusScreen} />
+      <Stack.Screen name="RegisterSummaryReview" component={RegisterSummaryReviewScreen} />
       <Stack.Screen name="Swimming" component={SwimmingScreen} />
       <Stack.Screen name="SwimmingStyle" component={SwimmingStyleScreen} />
       <Stack.Screen name="SwimmingExample" component={SwimmingExampleScreen} />

@@ -45,6 +45,7 @@ export const RegisterGainMuscleDetailsScreen: React.FC<RegisterGainMuscleDetails
     } else {
       console.log('RegisterGainMuscleDetailsScreen - Muscle mass goal:', muscleMassGoal, 'lbs');
     }
+    navigation.navigate('RegisterSummaryReview');
   };
 
   const handleDontKnow = () => {

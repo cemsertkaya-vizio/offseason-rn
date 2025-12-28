@@ -48,6 +48,7 @@ export const RegisterTrainEventCurrentStatusScreen: React.FC<RegisterTrainEventC
     console.log('RegisterTrainEventCurrentStatusScreen - Event type:', eventType);
     console.log('RegisterTrainEventCurrentStatusScreen - Event date:', eventMonth, eventYear);
     console.log('RegisterTrainEventCurrentStatusScreen - Training description:', trainingDescription);
+    navigation.navigate('RegisterSummaryReview');
   };
 
   return (
