@@ -60,7 +60,7 @@ export const WeightliftingMaxesScreen: React.FC<WeightliftingMaxesScreenProps> =
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-weightlifting.png')}
+          source={require('../../../assets/coach-weightlifting.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />

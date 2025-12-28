@@ -78,7 +78,7 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-yoga.png')}
+          source={require('../../../assets/coach-yoga.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />

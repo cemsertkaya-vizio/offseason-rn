@@ -45,7 +45,7 @@ export const AnythingElseScreen: React.FC<AnythingElseScreenProps> = ({ navigati
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-anything-else.png')}
+          source={require('../../../assets/coach-anything-else.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />

@@ -51,7 +51,7 @@ export const SwimmingExampleScreen: React.FC<SwimmingExampleScreenProps> = ({
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-swimming.png')}
+          source={require('../../../assets/coach-swimming.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />

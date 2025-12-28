@@ -10,68 +10,72 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../../types/navigation';
-import { NavigationArrows } from '../../../components/NavigationArrows';
-import { colors } from '../../../constants/colors';
+import { RootStackParamList } from '../../types/navigation';
+import { NavigationArrows } from '../../components/NavigationArrows';
+import { colors } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
 
-type WeightliftingEquipmentScreenNavigationProp = NativeStackNavigationProp<
+type RegisterGoalsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'WeightliftingEquipment'
+  'RegisterGoals'
 >;
 
-interface WeightliftingEquipmentScreenProps {
-  navigation: WeightliftingEquipmentScreenNavigationProp;
+interface RegisterGoalsScreenProps {
+  navigation: RegisterGoalsScreenNavigationProp;
 }
 
-const EQUIPMENT_OPTIONS = [
-  { id: 'barbells', label: 'Barbells & plates' },
-  { id: 'dumbells', label: 'Dumbells' },
-  { id: 'kettlebells', label: 'Kettlebells' },
-  { id: 'liftingMachines', label: 'Lifting machines' },
-  { id: 'cableMachines', label: 'Cable machines' },
-  { id: 'none', label: 'None' },
+const GOAL_OPTIONS = [
+  { id: 'get-stronger', label: 'Get stronger' },
+  { id: 'get-faster', label: 'Get faster' },
+  { id: 'gain-muscle', label: 'Gain muscle mass' },
+  { id: 'lose-fat', label: 'Lose body fat' },
+  { id: 'train-event', label: 'Train for an event' },
+  { id: 'push-myself', label: 'Push myself' },
 ];
 
-export const WeightliftingEquipmentScreen: React.FC<WeightliftingEquipmentScreenProps> = ({
+export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
   navigation,
 }) => {
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('WeightliftingEquipmentScreen - Next pressed with equipment:', selectedEquipment);
-    navigation.navigate('WeightliftingMaxes');
+    console.log('RegisterGoalsScreen - Next pressed with goals:', selectedGoals);
+    const selectedLabels = GOAL_OPTIONS
+      .filter((opt) => selectedGoals.includes(opt.id))
+      .map((opt) => opt.label);
+    console.log('RegisterGoalsScreen - Selected goal labels:', selectedLabels);
   };
 
-  const toggleEquipment = (equipmentId: string) => {
-    setSelectedEquipment((prev) => {
-      if (equipmentId === 'none') {
-        return prev.includes('none') ? [] : ['none'];
+  const MAX_SELECTIONS = 2;
+
+  const toggleGoal = (goalId: string) => {
+    setSelectedGoals((prev) => {
+      if (prev.includes(goalId)) {
+        return prev.filter((id) => id !== goalId);
       }
-      const withoutNone = prev.filter((id) => id !== 'none');
-      if (withoutNone.includes(equipmentId)) {
-        return withoutNone.filter((id) => id !== equipmentId);
+      if (prev.length >= MAX_SELECTIONS) {
+        return prev;
       }
-      return [...withoutNone, equipmentId];
+      return [...prev, goalId];
     });
   };
 
-  const isNextDisabled = selectedEquipment.length === 0;
+  const isNextDisabled = selectedGoals.length !== MAX_SELECTIONS;
 
-  const leftColumn = EQUIPMENT_OPTIONS.filter((_, index) => index % 2 === 0);
-  const rightColumn = EQUIPMENT_OPTIONS.filter((_, index) => index % 2 === 1);
+  const leftColumn = GOAL_OPTIONS.filter((_, index) => index % 2 === 0);
+  const rightColumn = GOAL_OPTIONS.filter((_, index) => index % 2 === 1);
 
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../../assets/coach-weightlifting.png')}
+          source={require('../../assets/coach-athlete.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -87,55 +91,53 @@ export const WeightliftingEquipmentScreen: React.FC<WeightliftingEquipmentScreen
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>WEIGHTLIFTING</Text>
-        <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
-
-        <Text style={styles.question}>
-          What equipment do you have access to?
+        <Text style={styles.title}>HOW DO YOU WANT TO LEVEL UP?</Text>
+        <Text style={styles.subtitle}>
+          Define your top two goals.
         </Text>
 
         <View style={styles.optionsContainer}>
           <View style={styles.column}>
-            {leftColumn.map((equipment) => (
+            {leftColumn.map((goal) => (
               <TouchableOpacity
-                key={equipment.id}
+                key={goal.id}
                 style={[
                   styles.optionButton,
-                  selectedEquipment.includes(equipment.id) && styles.optionButtonSelected,
+                  selectedGoals.includes(goal.id) && styles.optionButtonSelected,
                 ]}
-                onPress={() => toggleEquipment(equipment.id)}
+                onPress={() => toggleGoal(goal.id)}
                 activeOpacity={0.7}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedEquipment.includes(equipment.id) && styles.optionTextSelected,
+                    selectedGoals.includes(goal.id) && styles.optionTextSelected,
                   ]}
                 >
-                  {equipment.label}
+                  {goal.label}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <View style={styles.column}>
-            {rightColumn.map((equipment) => (
+            {rightColumn.map((goal) => (
               <TouchableOpacity
-                key={equipment.id}
+                key={goal.id}
                 style={[
                   styles.optionButton,
-                  selectedEquipment.includes(equipment.id) && styles.optionButtonSelected,
+                  selectedGoals.includes(goal.id) && styles.optionButtonSelected,
                 ]}
-                onPress={() => toggleEquipment(equipment.id)}
+                onPress={() => toggleGoal(goal.id)}
                 activeOpacity={0.7}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedEquipment.includes(equipment.id) && styles.optionTextSelected,
+                    selectedGoals.includes(goal.id) && styles.optionTextSelected,
                   ]}
                 >
-                  {equipment.label}
+                  {goal.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -199,15 +201,6 @@ const styles = StyleSheet.create({
     color: colors.offWhite,
     textAlign: 'center',
     marginBottom: 28,
-  },
-  question: {
-    fontFamily: 'Roboto',
-    fontSize: 16,
-    fontWeight: '400',
-    color: colors.offWhite,
-    textAlign: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 42,
   },
   optionsContainer: {
     flexDirection: 'row',

@@ -45,7 +45,7 @@ export const OtherScreen: React.FC<OtherScreenProps> = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-other.png')}
+          source={require('../../../assets/coach-other.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
