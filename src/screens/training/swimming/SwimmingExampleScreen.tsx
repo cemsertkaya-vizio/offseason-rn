@@ -9,10 +9,10 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types/navigation';
-import { NavigationArrows } from '../../components/NavigationArrows';
-import { ScrollPicker } from '../../components/ScrollPicker';
-import { colors } from '../../constants/colors';
+import { RootStackParamList } from '../../../types/navigation';
+import { NavigationArrows } from '../../../components/NavigationArrows';
+import { ScrollPicker } from '../../../components/ScrollPicker';
+import { colors } from '../../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 270;

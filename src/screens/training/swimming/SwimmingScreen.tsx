@@ -3,49 +3,58 @@ import {
   View,
   Text,
   StyleSheet,
+  TouchableOpacity,
   Dimensions,
   Image,
-  TextInput,
   ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types/navigation';
-import { NavigationArrows } from '../../components/NavigationArrows';
-import { colors } from '../../constants/colors';
+import { RootStackParamList } from '../../../types/navigation';
+import { NavigationArrows } from '../../../components/NavigationArrows';
+import { colors } from '../../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
 
-type OtherScreenNavigationProp = NativeStackNavigationProp<
+type SwimmingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'Other'
+  'Swimming'
 >;
 
-interface OtherScreenProps {
-  navigation: OtherScreenNavigationProp;
+interface SwimmingScreenProps {
+  navigation: SwimmingScreenNavigationProp;
 }
 
-export const OtherScreen: React.FC<OtherScreenProps> = ({ navigation }) => {
-  const [otherActivity, setOtherActivity] = useState('');
+type SwimmingLocation = 'pool' | 'openWater' | 'both' | null;
+
+const OPTIONS = [
+  { id: 'pool' as const, label: 'In a pool' },
+  { id: 'openWater' as const, label: 'In open water' },
+  { id: 'both' as const, label: 'Both' },
+];
+
+export const SwimmingScreen: React.FC<SwimmingScreenProps> = ({
+  navigation,
+}) => {
+  const [selectedLocation, setSelectedLocation] = useState<SwimmingLocation>(null);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('OtherScreen - Next pressed with activity:', otherActivity);
-    // Navigate to the next screen in the flow
-    // navigation.navigate('NextScreen');
+    console.log('SwimmingScreen - Next pressed with location:', selectedLocation);
+    navigation.navigate('SwimmingStyle');
   };
 
-  const isNextDisabled = otherActivity.trim() === '';
+  const isNextDisabled = selectedLocation === null;
 
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-other.png')}
+          source={require('../../assets/coach-swimming.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -61,22 +70,34 @@ export const OtherScreen: React.FC<OtherScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>OTHER</Text>
+        <Text style={styles.title}>SWIMMING</Text>
         <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
         <Text style={styles.question}>
-          You chose "other" earlier, what did we miss?
+          Where do you swim?
         </Text>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Tell us more..."
-            placeholderTextColor={colors.gray.muted}
-            value={otherActivity}
-            onChangeText={setOtherActivity}
-            multiline={false}
-          />
+        <View style={styles.optionsContainer}>
+          {OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.optionButton,
+                selectedLocation === option.id && styles.optionButtonSelected,
+              ]}
+              onPress={() => setSelectedLocation(option.id)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  selectedLocation === option.id && styles.optionTextSelected,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </ScrollView>
 
@@ -143,25 +164,36 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'left',
-    marginBottom: 14,
-    paddingHorizontal: 35,
+    marginBottom: 20,
+    paddingHorizontal: 42,
     alignSelf: 'flex-start',
   },
-  inputContainer: {
+  optionsContainer: {
     width: '100%',
-    paddingHorizontal: 35,
+    paddingHorizontal: 42,
+    gap: 16,
   },
-  input: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.offWhite,
+  optionButton: {
+    backgroundColor: colors.offWhite,
     borderRadius: 10,
-    height: 51,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+    paddingVertical: 11,
+  },
+  optionButtonSelected: {
+    backgroundColor: colors.beige,
+  },
+  optionText: {
     fontFamily: 'Roboto',
+    fontSize: 16,
     fontWeight: '400',
-    color: colors.offWhite,
+    color: colors.darkBrown,
+    textAlign: 'center',
+  },
+  optionTextSelected: {
+    color: colors.darkBrown,
   },
 });
 

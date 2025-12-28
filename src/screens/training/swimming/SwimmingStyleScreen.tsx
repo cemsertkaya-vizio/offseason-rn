@@ -10,41 +10,42 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types/navigation';
-import { NavigationArrows } from '../../components/NavigationArrows';
-import { colors } from '../../constants/colors';
+import { RootStackParamList } from '../../../types/navigation';
+import { NavigationArrows } from '../../../components/NavigationArrows';
+import { colors } from '../../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
 
-type WeightliftingScreenNavigationProp = NativeStackNavigationProp<
+type SwimmingStyleScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'Weightlifting'
+  'SwimmingStyle'
 >;
 
-interface WeightliftingScreenProps {
-  navigation: WeightliftingScreenNavigationProp;
+interface SwimmingStyleScreenProps {
+  navigation: SwimmingStyleScreenNavigationProp;
 }
 
-type TrainingStyle = 'fullBody' | 'muscleGroups' | null;
+type SwimmingStyle = 'intervals' | 'distance' | 'both' | null;
 
 const OPTIONS = [
-  { id: 'fullBody' as const, label: 'I like to hit full body.' },
-  { id: 'muscleGroups' as const, label: 'I like to prioritize muscle groups.' },
+  { id: 'intervals' as const, label: 'Structured interval sets' },
+  { id: 'distance' as const, label: 'For distance or time' },
+  { id: 'both' as const, label: 'Both' },
 ];
 
-export const WeightliftingScreen: React.FC<WeightliftingScreenProps> = ({
+export const SwimmingStyleScreen: React.FC<SwimmingStyleScreenProps> = ({
   navigation,
 }) => {
-  const [selectedStyle, setSelectedStyle] = useState<TrainingStyle>(null);
+  const [selectedStyle, setSelectedStyle] = useState<SwimmingStyle>(null);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('WeightliftingScreen - Next pressed with style:', selectedStyle);
-    navigation.navigate('WeightliftingEquipment');
+    console.log('SwimmingStyleScreen - Next pressed with style:', selectedStyle);
+    navigation.navigate('SwimmingExample');
   };
 
   const isNextDisabled = selectedStyle === null;
@@ -53,7 +54,7 @@ export const WeightliftingScreen: React.FC<WeightliftingScreenProps> = ({
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-weightlifting.png')}
+          source={require('../../assets/coach-swimming.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -69,11 +70,11 @@ export const WeightliftingScreen: React.FC<WeightliftingScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>WEIGHTLIFTING</Text>
+        <Text style={styles.title}>SWIMMING</Text>
         <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
         <Text style={styles.question}>
-          Describe your typical weight training day.
+          Do you swim...
         </Text>
 
         <View style={styles.optionsContainer}>
@@ -162,9 +163,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '400',
     color: colors.offWhite,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 20,
     paddingHorizontal: 42,
+    alignSelf: 'flex-start',
   },
   optionsContainer: {
     width: '100%',

@@ -1,11 +1,5 @@
-export * from './WeightliftingScreen';
-export * from './WeightliftingEquipmentScreen';
-export * from './WeightliftingMaxesScreen';
-export * from './SwimmingScreen';
-export * from './SwimmingStyleScreen';
-export * from './SwimmingExampleScreen';
-export * from './PilatesScreen';
-export * from './PilatesStudioScreen';
-export * from './OtherScreen';
-export * from './AnythingElseScreen';
+export * from './weightlifting';
+export * from './swimming';
+export * from './pilates';
+export * from './other';
 
