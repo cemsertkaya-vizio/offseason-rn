@@ -55,6 +55,8 @@ export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
       navigation.navigate('RegisterGetStronger');
     } else if (selectedGoals.includes('get-faster')) {
       navigation.navigate('RegisterGetFaster');
+    } else if (selectedGoals.includes('gain-muscle')) {
+      navigation.navigate('RegisterGainMuscle');
     }
   };
 
