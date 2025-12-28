@@ -8,4 +8,6 @@ export * from './RegisterPreferredDaysScreen';
 export * from './RegisterGoalsScreen';
 export * from './RegisterGetStrongerScreen';
 export * from './RegisterGetStrongerDetailsScreen';
+export * from './RegisterGetFasterScreen';
+export * from './RegisterGetFasterDetailsScreen';
 

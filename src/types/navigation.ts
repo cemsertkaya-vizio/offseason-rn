@@ -11,6 +11,8 @@ export type RootStackParamList = {
   RegisterGoals: undefined;
   RegisterGetStronger: undefined;
   RegisterGetStrongerDetails: undefined;
+  RegisterGetFaster: undefined;
+  RegisterGetFasterDetails: { goalType: 'sprint' | 'long-distance' | 'both' };
   Weightlifting: undefined;
   WeightliftingEquipment: undefined;
   WeightliftingMaxes: undefined;
