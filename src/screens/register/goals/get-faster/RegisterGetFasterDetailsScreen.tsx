@@ -10,10 +10,10 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../types/navigation';
-import { NavigationArrows } from '../../components/NavigationArrows';
-import { ScrollPicker } from '../../components/ScrollPicker';
-import { colors } from '../../constants/colors';
+import { RootStackParamList } from '../../../../types/navigation';
+import { NavigationArrows } from '../../../../components/NavigationArrows';
+import { ScrollPicker } from '../../../../components/ScrollPicker';
+import { colors } from '../../../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -65,7 +65,7 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-get-faster.png')}
+          source={require('../../../../assets/coach-get-faster.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />

@@ -10,78 +10,70 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types/navigation';
-import { NavigationArrows } from '../../components/NavigationArrows';
-import { colors } from '../../constants/colors';
+import { RootStackParamList } from '../../../../types/navigation';
+import { NavigationArrows } from '../../../../components/NavigationArrows';
+import { colors } from '../../../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
 
-type RegisterGoalsScreenNavigationProp = NativeStackNavigationProp<
+type RegisterGetStrongerScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'RegisterGoals'
+  'RegisterGetStronger'
 >;
 
-interface RegisterGoalsScreenProps {
-  navigation: RegisterGoalsScreenNavigationProp;
+interface RegisterGetStrongerScreenProps {
+  navigation: RegisterGetStrongerScreenNavigationProp;
 }
 
-const GOAL_OPTIONS = [
-  { id: 'get-stronger', label: 'Get stronger' },
-  { id: 'get-faster', label: 'Get faster' },
-  { id: 'gain-muscle', label: 'Gain muscle mass' },
-  { id: 'lose-fat', label: 'Lose body fat' },
-  { id: 'train-event', label: 'Train for an event' },
-  { id: 'push-myself', label: 'Push myself' },
+const MUSCLE_GROUP_OPTIONS = [
+  { id: 'chest', label: 'Chest' },
+  { id: 'back', label: 'Back' },
+  { id: 'shoulders', label: 'Shoulders' },
+  { id: 'arms', label: 'Arms' },
+  { id: 'legs', label: 'Legs' },
+  { id: 'glutes', label: 'Glutes' },
+  { id: 'core', label: 'Core' },
+  { id: 'full-body', label: 'Full body' },
 ];
 
-export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
+export const RegisterGetStrongerScreen: React.FC<RegisterGetStrongerScreenProps> = ({
   navigation,
 }) => {
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedMuscleGroups, setSelectedMuscleGroups] = useState<string[]>([]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleNext = () => {
-    console.log('RegisterGoalsScreen - Next pressed with goals:', selectedGoals);
-    const selectedLabels = GOAL_OPTIONS
-      .filter((opt) => selectedGoals.includes(opt.id))
+    console.log('RegisterGetStrongerScreen - Next pressed with muscle groups:', selectedMuscleGroups);
+    const selectedLabels = MUSCLE_GROUP_OPTIONS
+      .filter((opt) => selectedMuscleGroups.includes(opt.id))
       .map((opt) => opt.label);
-    console.log('RegisterGoalsScreen - Selected goal labels:', selectedLabels);
-    
-    if (selectedGoals.includes('get-stronger')) {
-      navigation.navigate('RegisterGetStronger');
-    } else if (selectedGoals.includes('get-faster')) {
-      navigation.navigate('RegisterGetFaster');
-    }
+    console.log('RegisterGetStrongerScreen - Selected muscle group labels:', selectedLabels);
+    navigation.navigate('RegisterGetStrongerDetails');
   };
 
-  const MAX_SELECTIONS = 2;
-
-  const toggleGoal = (goalId: string) => {
-    setSelectedGoals((prev) => {
-      if (prev.includes(goalId)) {
-        return prev.filter((id) => id !== goalId);
+  const toggleMuscleGroup = (groupId: string) => {
+    setSelectedMuscleGroups((prev) => {
+      if (prev.includes(groupId)) {
+        return prev.filter((id) => id !== groupId);
       }
-      if (prev.length >= MAX_SELECTIONS) {
-        return prev;
-      }
-      return [...prev, goalId];
+      return [...prev, groupId];
     });
   };
 
-  const isNextDisabled = selectedGoals.length !== MAX_SELECTIONS;
+  const isNextDisabled = selectedMuscleGroups.length === 0;
 
-  const leftColumn = GOAL_OPTIONS.filter((_, index) => index % 2 === 0);
-  const rightColumn = GOAL_OPTIONS.filter((_, index) => index % 2 === 1);
+  const leftColumn = MUSCLE_GROUP_OPTIONS.filter((_, index) => index % 2 === 0);
+  const rightColumn = MUSCLE_GROUP_OPTIONS.filter((_, index) => index % 2 === 1);
 
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/coach-athlete.png')}
+          source={require('../../../../assets/coach-get-stronger.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -97,53 +89,57 @@ export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>HOW DO YOU WANT TO LEVEL UP?</Text>
+        <Text style={styles.title}>GET STRONGER</Text>
         <Text style={styles.subtitle}>
-          Define your top two goals.
+          Let's break this down a bit more.
+        </Text>
+
+        <Text style={styles.question}>
+          What do you want to get stronger?
         </Text>
 
         <View style={styles.optionsContainer}>
           <View style={styles.column}>
-            {leftColumn.map((goal) => (
+            {leftColumn.map((group) => (
               <TouchableOpacity
-                key={goal.id}
+                key={group.id}
                 style={[
                   styles.optionButton,
-                  selectedGoals.includes(goal.id) && styles.optionButtonSelected,
+                  selectedMuscleGroups.includes(group.id) && styles.optionButtonSelected,
                 ]}
-                onPress={() => toggleGoal(goal.id)}
+                onPress={() => toggleMuscleGroup(group.id)}
                 activeOpacity={0.7}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedGoals.includes(goal.id) && styles.optionTextSelected,
+                    selectedMuscleGroups.includes(group.id) && styles.optionTextSelected,
                   ]}
                 >
-                  {goal.label}
+                  {group.label}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <View style={styles.column}>
-            {rightColumn.map((goal) => (
+            {rightColumn.map((group) => (
               <TouchableOpacity
-                key={goal.id}
+                key={group.id}
                 style={[
                   styles.optionButton,
-                  selectedGoals.includes(goal.id) && styles.optionButtonSelected,
+                  selectedMuscleGroups.includes(group.id) && styles.optionButtonSelected,
                 ]}
-                onPress={() => toggleGoal(goal.id)}
+                onPress={() => toggleMuscleGroup(group.id)}
                 activeOpacity={0.7}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    selectedGoals.includes(goal.id) && styles.optionTextSelected,
+                    selectedMuscleGroups.includes(group.id) && styles.optionTextSelected,
                   ]}
                 >
-                  {goal.label}
+                  {group.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -206,7 +202,15 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'center',
-    marginBottom: 28,
+    marginBottom: 35,
+  },
+  question: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    fontWeight: '400',
+    color: colors.offWhite,
+    marginBottom: 16,
+    paddingHorizontal: 42,
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 30,
     paddingVertical: 11,
   },
   optionButtonSelected: {
