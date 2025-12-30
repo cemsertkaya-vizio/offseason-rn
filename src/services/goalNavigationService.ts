@@ -10,6 +10,7 @@ const GOAL_SCREEN_MAP: GoalScreenMap = {
   'gain-muscle': 'RegisterGainMuscle',
   'lose-fat': 'RegisterLoseBodyFat',
   'train-event': 'RegisterTrainEvent',
+  'push-myself': 'RegisterPushMyself',
 };
 
 export const goalNavigationService = {

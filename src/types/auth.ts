@@ -49,6 +49,7 @@ export interface GoalData {
   eventYear?: number;
   trainingStatus?: string;
   currentStatus?: string;
+  pushType?: string;
 }
 
 export interface ProfileData {
