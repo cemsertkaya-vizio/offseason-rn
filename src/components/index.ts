@@ -9,4 +9,5 @@ export * from './WeightInput';
 export * from './WeightPicker';
 export * from './AgeInput';
 export * from './GenderPicker';
+export * from './PhoneInput';
 

@@ -10,14 +10,20 @@ import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { RegistrationProvider } from './src/contexts/RegistrationContext';
 
 function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
-        <RootNavigator />
-      </NavigationContainer>
+      <AuthProvider>
+        <RegistrationProvider>
+          <NavigationContainer>
+            <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
+            <RootNavigator />
+          </NavigationContainer>
+        </RegistrationProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

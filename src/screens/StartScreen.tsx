@@ -31,6 +31,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
 
   const handleLogIn = () => {
     console.log('StartScreen - Log In pressed');
+    navigation.navigate('Login');
   };
 
   return (

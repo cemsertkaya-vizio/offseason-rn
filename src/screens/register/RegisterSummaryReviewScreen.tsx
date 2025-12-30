@@ -7,9 +7,14 @@ import {
   ScrollView,
   TextInput,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
+import { useRegistration } from '../../contexts/RegistrationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { profileService } from '../../services/profileService';
 import { colors } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -26,21 +31,62 @@ interface RegisterSummaryReviewScreenProps {
 export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenProps> = ({
   navigation,
 }) => {
+  const { registrationData, updateRegistrationData, clearRegistrationData } = useRegistration();
+  const { user } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
   const [editMessage, setEditMessage] = useState('');
   const [selectedButton, setSelectedButton] = useState<'approve' | 'edit' | null>(null);
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
 
   const handleApprove = () => {
     setSelectedButton('approve');
     setIsApproved(true);
+    updateRegistrationData({ profileSummary: summaryText });
   };
 
   const handleEdit = () => {
     setSelectedButton('edit');
   };
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
     console.log('RegisterSummaryReviewScreen - Get Started pressed');
+    
+    if (!user) {
+      Alert.alert('Error', 'You must be authenticated to complete registration. Please restart the registration process.');
+      return;
+    }
+
+    if (!registrationData.firstName || !registrationData.phoneNumber) {
+      Alert.alert('Error', 'Registration data incomplete. Please go back and complete all steps.');
+      return;
+    }
+
+    setIsCreatingProfile(true);
+    console.log('RegisterSummaryReviewScreen - Creating profile for user:', user.id);
+
+    const profileResult = await profileService.createProfile(
+      user.id,
+      registrationData as any
+    );
+
+    setIsCreatingProfile(false);
+
+    if (profileResult.success) {
+      console.log('RegisterSummaryReviewScreen - Profile created successfully');
+      clearRegistrationData();
+      Alert.alert(
+        'Success!',
+        'Your account has been created. Welcome to Offseason!',
+        [{ text: 'OK', onPress: () => {} }]
+      );
+    } else {
+      console.log('RegisterSummaryReviewScreen - Error creating profile:', profileResult.error);
+      Alert.alert(
+        'Error',
+        profileResult.error || 'Failed to create profile. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const handleSendMessage = () => {
@@ -124,8 +170,13 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
                 style={styles.getStartedButton}
                 onPress={handleGetStarted}
                 activeOpacity={0.7}
+                disabled={isCreatingProfile}
               >
-                <Text style={styles.getStartedButtonText}>Get Started</Text>
+                {isCreatingProfile ? (
+                  <ActivityIndicator size="small" color={colors.darkBrown} />
+                ) : (
+                  <Text style={styles.getStartedButtonText}>Get Started</Text>
+                )}
               </TouchableOpacity>
             </>
           )}

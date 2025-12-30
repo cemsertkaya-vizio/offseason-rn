@@ -12,33 +12,24 @@ import PhoneInputComponent from 'react-native-phone-number-input';
 import { RootStackParamList } from '../../types/navigation';
 import { BackgroundImageSection } from '../../components/BackgroundImageSection';
 import { NavigationArrows } from '../../components/NavigationArrows';
-import { UnderlineTextField } from '../../components/UnderlineTextField';
-import { PhoneInput } from '../../components/PhoneInput';
-import { useRegistration } from '../../contexts/RegistrationContext';
 import { authService } from '../../services/authService';
-import { getE164PhoneNumber } from '../../utils/phoneFormatter';
 import { colors } from '../../constants/colors';
 
-type RegisterCoreProfileScreenNavigationProp = NativeStackNavigationProp<
+type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'RegisterCoreProfile'
+  'Login'
 >;
 
-interface RegisterCoreProfileScreenProps {
-  navigation: RegisterCoreProfileScreenNavigationProp;
+interface LoginScreenProps {
+  navigation: LoginScreenNavigationProp;
 }
 
-export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps> = ({
-  navigation,
-}) => {
-  const { updateRegistrationData } = useRegistration();
+export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const phoneInputRef = useRef<PhoneInputComponent>(null);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [formattedPhone, setFormattedPhone] = useState('');
   const [countryCode, setCountryCode] = useState('US');
-  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
 
   const handleBack = () => {
@@ -55,36 +46,26 @@ export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps>
     }
 
     const e164Phone = formattedPhone || phoneNumber;
-    console.log('RegisterCoreProfileScreen - Sending OTP to:', e164Phone);
     
-    setIsSendingOTP(true);
+    setIsSending(true);
     setError('');
-
-    const callingCode = phoneInputRef.current?.getCallingCode() || '1';
-    
-    updateRegistrationData({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      phoneNumber: phoneNumber.trim(),
-      countryCode: countryCode,
-      countryCallingCode: callingCode,
-    });
+    console.log('LoginScreen - Sending OTP to:', e164Phone);
 
     const result = await authService.sendPhoneOTP(e164Phone);
 
-    setIsSendingOTP(false);
+    setIsSending(false);
 
     if (result.success) {
-      console.log('RegisterCoreProfileScreen - OTP sent successfully');
+      console.log('LoginScreen - OTP sent, navigating to verify screen');
       navigation.navigate('VerifyOTP', { phoneNumber: e164Phone });
     } else {
-      console.log('RegisterCoreProfileScreen - Error sending OTP:', result.error);
-      setError(result.error || 'Failed to send code');
-      Alert.alert('Error', result.error || 'Failed to send verification code. Please try again.');
+      console.log('LoginScreen - Error sending OTP:', result.error);
+      setError(result.error || 'Failed to send code. Please try again.');
+      Alert.alert('Error', result.error || 'Failed to send verification code');
     }
   };
 
-  const isNextDisabled = !firstName.trim() || !lastName.trim() || !phoneNumber.trim() || isSendingOTP;
+  const isNextDisabled = !phoneNumber.trim() || isSending;
 
   return (
     <View style={styles.container}>
@@ -100,25 +81,12 @@ export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps>
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Let's get you in the game.</Text>
+        <Text style={styles.title}>Welcome back!</Text>
+        <Text style={styles.subtitle}>
+          Enter your phone number to log in
+        </Text>
 
         <View style={styles.inputsWrapper}>
-          <UnderlineTextField
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={setFirstName}
-            style={styles.textField}
-            editable={!isSendingOTP}
-          />
-
-          <UnderlineTextField
-            placeholder="Last Name"
-            value={lastName}
-            onChangeText={setLastName}
-            style={styles.textField}
-            editable={!isSendingOTP}
-          />
-
           <View style={styles.phoneInputContainer}>
             <PhoneInputComponent
               ref={phoneInputRef}
@@ -141,7 +109,7 @@ export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps>
               onChangeFormattedText={(text) => {
                 setFormattedPhone(text);
               }}
-              disabled={isSendingOTP}
+              disabled={isSending}
               containerStyle={styles.phoneContainer}
               textContainerStyle={styles.textContainer}
               textInputStyle={styles.textInput}
@@ -159,7 +127,7 @@ export const RegisterCoreProfileScreen: React.FC<RegisterCoreProfileScreenProps>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          {isSendingOTP && (
+          {isSending && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.offWhite} />
               <Text style={styles.loadingText}>Sending code...</Text>
@@ -187,7 +155,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 49,
-    paddingTop: 19,
+    paddingTop: 80,
     alignItems: 'center',
   },
   title: {
@@ -197,18 +165,22 @@ const styles = StyleSheet.create({
     color: colors.offWhite,
     textAlign: 'center',
     lineHeight: 38.78,
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    fontWeight: '400',
+    color: colors.offWhite,
+    textAlign: 'center',
     marginBottom: 40,
   },
   inputsWrapper: {
     width: '100%',
     alignItems: 'center',
   },
-  textField: {
-    marginBottom: 0,
-  },
   phoneInputContainer: {
     width: '100%',
-    marginTop: 20,
   },
   phoneContainer: {
     backgroundColor: 'transparent',

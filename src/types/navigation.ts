@@ -1,5 +1,7 @@
 export type RootStackParamList = {
   Start: undefined;
+  Login: undefined;
+  VerifyOTP: { phoneNumber: string };
   Register: undefined;
   CoreProfile: undefined;
   RegisterCoreProfile: undefined;
