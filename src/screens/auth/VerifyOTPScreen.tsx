@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
@@ -168,57 +169,66 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
         source={require('../../assets/coach-background.png')}
       />
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Enter Verification Code</Text>
-        <Text style={styles.subtitle}>
-          We sent a 6-digit code to{'\n'}
-          {maskedPhone}
-        </Text>
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        enableAutomaticScroll
+        extraScrollHeight={-50}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>Enter Verification Code</Text>
+          <Text style={styles.subtitle}>
+            We sent a 6-digit code to{'\n'}
+            {maskedPhone}
+          </Text>
 
-        <View style={styles.otpContainer}>
-          <TextInput
-            ref={inputRef}
-            style={styles.otpInput}
-            value={otp}
-            onChangeText={handleOtpChange}
-            keyboardType="number-pad"
-            maxLength={OTP_LENGTH}
-            autoFocus
-            placeholder="000000"
-            placeholderTextColor={colors.gray.muted}
-            editable={!isVerifying}
-          />
-        </View>
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        {isVerifying && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.offWhite} />
-            <Text style={styles.loadingText}>Verifying...</Text>
+          <View style={styles.otpContainer}>
+            <TextInput
+              ref={inputRef}
+              style={styles.otpInput}
+              value={otp}
+              onChangeText={handleOtpChange}
+              keyboardType="number-pad"
+              maxLength={OTP_LENGTH}
+              autoFocus
+              placeholder="000000"
+              placeholderTextColor={colors.gray.muted}
+              editable={!isVerifying}
+            />
           </View>
-        )}
 
-        <TouchableOpacity
-          style={styles.resendButton}
-          onPress={handleResendCode}
-          disabled={resendCooldown > 0 || isResending}
-          activeOpacity={0.7}
-        >
-          {isResending ? (
-            <ActivityIndicator size="small" color={colors.offWhite} />
-          ) : (
-            <Text style={[
-              styles.resendText,
-              resendCooldown > 0 && styles.resendTextDisabled
-            ]}>
-              {resendCooldown > 0
-                ? `Resend code in ${resendCooldown}s`
-                : 'Resend code'}
-            </Text>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          {isVerifying && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.offWhite} />
+              <Text style={styles.loadingText}>Verifying...</Text>
+            </View>
           )}
-        </TouchableOpacity>
-      </View>
+
+          <TouchableOpacity
+            style={styles.resendButton}
+            onPress={handleResendCode}
+            disabled={resendCooldown > 0 || isResending}
+            activeOpacity={0.7}
+          >
+            {isResending ? (
+              <ActivityIndicator size="small" color={colors.offWhite} />
+            ) : (
+              <Text style={[
+                styles.resendText,
+                resendCooldown > 0 && styles.resendTextDisabled
+              ]}>
+                {resendCooldown > 0
+                  ? `Resend code in ${resendCooldown}s`
+                  : 'Resend code'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAwareScrollView>
 
       <NavigationArrows
         onBackPress={handleBack}
@@ -234,10 +244,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.darkBrown,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
-    flex: 1,
     paddingHorizontal: 49,
     paddingTop: 80,
+    paddingBottom: 100,
     alignItems: 'center',
   },
   title: {
