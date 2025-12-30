@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +16,8 @@ import type { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
 import { NavigationArrows } from '../../components/NavigationArrows';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
+import { profileService } from '../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -40,23 +44,85 @@ export const RegisterScheduleScreen: React.FC<RegisterScheduleScreenProps> = ({
   navigation,
   route,
 }) => {
-  const { activities } = route.params;
-  const [schedule, setSchedule] = useState<ScheduleState>(() => {
-    const initial: ScheduleState = {};
-    activities.forEach((activity) => {
-      initial[activity] = null;
-    });
-    return initial;
-  });
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<string[]>(route.params?.activities || []);
+  const [schedule, setSchedule] = useState<ScheduleState>({});
   const [noPreference, setNoPreference] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('RegisterScheduleScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile) {
+        if (!route.params?.activities && result.profile.selected_activities) {
+          console.log('RegisterScheduleScreen - Loading activities from profile');
+          setActivities(result.profile.selected_activities);
+        }
+
+        if (result.profile.training_schedule) {
+          console.log('RegisterScheduleScreen - Pre-filling with saved schedule');
+          setSchedule(result.profile.training_schedule as ScheduleState);
+        } else if (activities.length > 0) {
+          const initial: ScheduleState = {};
+          activities.forEach((activity) => {
+            initial[activity] = null;
+          });
+          setSchedule(initial);
+        }
+      } else if (activities.length > 0) {
+        const initial: ScheduleState = {};
+        activities.forEach((activity) => {
+          initial[activity] = null;
+        });
+        setSchedule(initial);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user, activities.length, route.params?.activities]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('RegisterScheduleScreen - Next pressed with schedule:', schedule);
-    navigation.navigate('RegisterPreferredDays', { activities });
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('RegisterScheduleScreen - Saving progress with schedule:', schedule);
+
+    const result = await profileService.updateOnboardingProgress(
+      user.id,
+      'schedule',
+      { training_schedule: schedule }
+    );
+
+    setIsSaving(false);
+
+    if (result.success) {
+      console.log('RegisterScheduleScreen - Progress saved, navigating to preferred days');
+      navigation.navigate('RegisterPreferredDays', { activities });
+    } else {
+      console.log('RegisterScheduleScreen - Error saving progress:', result.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const handleDaySelect = (activity: string, day: number) => {
@@ -77,7 +143,15 @@ export const RegisterScheduleScreen: React.FC<RegisterScheduleScreenProps> = ({
   };
 
   const hasAnySelection = Object.values(schedule).some((v) => v !== null);
-  const isNextDisabled = !noPreference && !hasAnySelection;
+  const isNextDisabled = !noPreference && !hasAnySelection || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -169,6 +243,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

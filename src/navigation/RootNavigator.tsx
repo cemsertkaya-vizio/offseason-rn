@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AppLoadingScreen, HomeScreen, StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen, RegisterGetFasterScreen, RegisterGetFasterDetailsScreen, RegisterGainMuscleScreen, RegisterGainMuscleDetailsScreen, RegisterTrainEventScreen, RegisterTrainEventDetailsScreen, RegisterTrainEventTrainingStatusScreen, RegisterTrainEventCurrentStatusScreen, RegisterSummaryReviewScreen } from '../screens';
-import { WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
+import { AppLoadingScreen, HomeScreen, StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterPreferencesScreen, RegisterScheduleScreen, RegisterPreferredDaysScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen, RegisterGetFasterScreen, RegisterGetFasterDetailsScreen, RegisterGainMuscleScreen, RegisterGainMuscleDetailsScreen, RegisterTrainEventScreen, RegisterTrainEventDetailsScreen, RegisterTrainEventTrainingStatusScreen, RegisterTrainEventCurrentStatusScreen, RegisterSummaryReviewScreen } from '../screens';
+import { WeightliftingScreen, WeightliftingEquipmentScreen, WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
 import { LoginScreen, VerifyOTPScreen } from '../screens/auth';
 import { RootStackParamList } from '../types/navigation';
 
@@ -24,6 +24,9 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="RegisterCoreProfile" component={RegisterCoreProfileScreen} />
       <Stack.Screen name="RegisterPhysicalInfo" component={RegisterPhysicalInfoScreen} />
       <Stack.Screen name="RegisterLocation" component={RegisterLocationScreen} />
+      <Stack.Screen name="RegisterPreferences" component={RegisterPreferencesScreen} />
+      <Stack.Screen name="RegisterSchedule" component={RegisterScheduleScreen} />
+      <Stack.Screen name="RegisterPreferredDays" component={RegisterPreferredDaysScreen} />
       <Stack.Screen name="RegisterGoals" component={RegisterGoalsScreen} />
       <Stack.Screen name="RegisterGetStronger" component={RegisterGetStrongerScreen} />
       <Stack.Screen name="RegisterGetStrongerDetails" component={RegisterGetStrongerDetailsScreen} />
@@ -36,6 +39,9 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="RegisterTrainEventTrainingStatus" component={RegisterTrainEventTrainingStatusScreen} />
       <Stack.Screen name="RegisterTrainEventCurrentStatus" component={RegisterTrainEventCurrentStatusScreen} />
       <Stack.Screen name="RegisterSummaryReview" component={RegisterSummaryReviewScreen} />
+      <Stack.Screen name="Weightlifting" component={WeightliftingScreen} />
+      <Stack.Screen name="WeightliftingEquipment" component={WeightliftingEquipmentScreen} />
+      <Stack.Screen name="WeightliftingMaxes" component={WeightliftingMaxesScreen} />
       <Stack.Screen name="Swimming" component={SwimmingScreen} />
       <Stack.Screen name="SwimmingStyle" component={SwimmingStyleScreen} />
       <Stack.Screen name="SwimmingExample" component={SwimmingExampleScreen} />

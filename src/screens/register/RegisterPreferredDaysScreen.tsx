@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +16,8 @@ import type { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
 import { NavigationArrows } from '../../components/NavigationArrows';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
+import { profileService } from '../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -49,23 +53,85 @@ export const RegisterPreferredDaysScreen: React.FC<RegisterPreferredDaysScreenPr
   navigation,
   route,
 }) => {
-  const { activities } = route.params;
-  const [preferredDays, setPreferredDays] = useState<PreferredDaysState>(() => {
-    const initial: PreferredDaysState = {};
-    activities.forEach((activity) => {
-      initial[activity] = [];
-    });
-    return initial;
-  });
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<string[]>(route.params?.activities || []);
+  const [preferredDays, setPreferredDays] = useState<PreferredDaysState>({});
   const [noPreference, setNoPreference] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('RegisterPreferredDaysScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile) {
+        if (!route.params?.activities && result.profile.selected_activities) {
+          console.log('RegisterPreferredDaysScreen - Loading activities from profile');
+          setActivities(result.profile.selected_activities);
+        }
+
+        if (result.profile.preferred_days) {
+          console.log('RegisterPreferredDaysScreen - Pre-filling with saved preferred days');
+          setPreferredDays(result.profile.preferred_days as PreferredDaysState);
+        } else if (activities.length > 0) {
+          const initial: PreferredDaysState = {};
+          activities.forEach((activity) => {
+            initial[activity] = [];
+          });
+          setPreferredDays(initial);
+        }
+      } else if (activities.length > 0) {
+        const initial: PreferredDaysState = {};
+        activities.forEach((activity) => {
+          initial[activity] = [];
+        });
+        setPreferredDays(initial);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user, activities.length, route.params?.activities]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('RegisterPreferredDaysScreen - Next pressed with preferred days:', preferredDays);
-    navigation.navigate('Weightlifting');
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('RegisterPreferredDaysScreen - Saving progress with preferred days:', preferredDays);
+
+    const result = await profileService.updateOnboardingProgress(
+      user.id,
+      'preferred_days',
+      { preferred_days: preferredDays }
+    );
+
+    setIsSaving(false);
+
+    if (result.success) {
+      console.log('RegisterPreferredDaysScreen - Progress saved, navigating to weightlifting');
+      navigation.navigate('Weightlifting');
+    } else {
+      console.log('RegisterPreferredDaysScreen - Error saving progress:', result.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const toggleDay = (activity: string, dayId: string) => {
@@ -95,7 +161,15 @@ export const RegisterPreferredDaysScreen: React.FC<RegisterPreferredDaysScreenPr
   };
 
   const hasAnySelection = Object.values(preferredDays).some((days) => days.length > 0);
-  const isNextDisabled = !noPreference && !hasAnySelection;
+  const isNextDisabled = !noPreference && !hasAnySelection || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -184,6 +258,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,
