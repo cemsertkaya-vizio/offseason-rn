@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   FlatList,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -15,6 +17,8 @@ import { BackgroundImageSection } from '../../components/BackgroundImageSection'
 import { NavigationArrows } from '../../components/NavigationArrows';
 import { UnderlineTextField } from '../../components/UnderlineTextField';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
+import { profileService } from '../../services/profileService';
 
 const { MapKitSearchCompleter } = NativeModules;
 
@@ -37,9 +41,12 @@ interface LocationSuggestion {
 export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [location, setLocation] = useState('');
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const searchLocation = useCallback(async (query: string) => {
@@ -78,12 +85,31 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
   }, [searchLocation]);
 
   useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('RegisterLocationScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile && result.profile.location) {
+        console.log('RegisterLocationScreen - Pre-filling with saved location');
+        setLocation(result.profile.location);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+
     return () => {
       if (debounceTimeout.current) {
         clearTimeout(debounceTimeout.current);
       }
     };
-  }, []);
+  }, [user]);
 
   const handleSuggestionSelect = useCallback((suggestion: LocationSuggestion) => {
     setLocation(suggestion.fullText);
@@ -95,11 +121,37 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('RegisterLocationScreen - Next pressed with location:', location);
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('RegisterLocationScreen - Saving progress');
+
+    const result = await profileService.updateOnboardingProgress(
+      user.id,
+      'location',
+      { location }
+    );
+
+    setIsSaving(false);
+
+    if (result.success) {
+      console.log('RegisterLocationScreen - Progress saved, navigating to preferences');
+      navigation.navigate('RegisterPreferences');
+    } else {
+      console.log('RegisterLocationScreen - Error saving progress:', result.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
-  const isNextDisabled = !location.trim();
+  const isNextDisabled = !location.trim() || isSaving;
 
   const renderSuggestionItem = ({ item }: { item: LocationSuggestion }) => (
     <TouchableOpacity
@@ -113,6 +165,14 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
       ) : null}
     </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -168,6 +228,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,

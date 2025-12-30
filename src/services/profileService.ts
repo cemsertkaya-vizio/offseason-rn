@@ -2,15 +2,114 @@ import { supabase } from '../config/supabase';
 import type { RegistrationData, ProfileData } from '../types/auth';
 
 export const profileService = {
+  createInitialProfile: async (
+    userId: string,
+    basicData: { firstName: string; lastName: string; phoneNumber: string }
+  ): Promise<{ success: boolean; profile?: ProfileData; error?: string }> => {
+    try {
+      console.log('profileService - Creating initial profile for user:', userId);
+
+      const profileData = {
+        id: userId,
+        first_name: basicData.firstName,
+        last_name: basicData.lastName,
+        phone_number: basicData.phoneNumber,
+        onboarding_step: 'phone_verified',
+        registration_completed_at: null,
+      };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+
+      if (error) {
+        console.log('profileService - Error creating initial profile:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      console.log('profileService - Initial profile created successfully');
+      return { success: true, profile: data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('profileService - Exception creating initial profile:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  updateOnboardingProgress: async (
+    userId: string,
+    step: string,
+    data: Partial<Omit<ProfileData, 'id' | 'created_at' | 'updated_at'>>
+  ): Promise<{ success: boolean; profile?: ProfileData; error?: string }> => {
+    try {
+      console.log('profileService - Updating onboarding progress for user:', userId, 'Step:', step);
+
+      const updateData = {
+        ...data,
+        onboarding_step: step,
+      };
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.log('profileService - Error updating onboarding progress:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      console.log('profileService - Onboarding progress updated successfully');
+      return { success: true, profile };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('profileService - Exception updating onboarding progress:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  getOnboardingStatus: async (
+    userId: string
+  ): Promise<{ success: boolean; step?: string; profile?: ProfileData; error?: string }> => {
+    try {
+      console.log('profileService - Getting onboarding status for user:', userId);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('profileService - No profile found for user');
+          return { success: true, step: undefined, profile: undefined };
+        }
+        console.log('profileService - Error getting onboarding status:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      console.log('profileService - Onboarding status:', data.onboarding_step);
+      return { success: true, step: data.onboarding_step, profile: data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('profileService - Exception getting onboarding status:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+
   createProfile: async (
     userId: string,
     registrationData: RegistrationData
   ): Promise<{ success: boolean; profile?: ProfileData; error?: string }> => {
     try {
-      console.log('profileService - Creating profile for user:', userId);
+      console.log('profileService - Completing profile for user:', userId);
 
       const profileData = {
-        id: userId,
         first_name: registrationData.firstName,
         last_name: registrationData.lastName,
         phone_number: registrationData.phoneNumber,
@@ -25,25 +124,27 @@ export const profileService = {
         preferred_days: registrationData.preferredDays,
         goals: registrationData.goals,
         profile_summary: registrationData.profileSummary,
+        onboarding_step: 'complete',
         registration_completed_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
         .from('profiles')
-        .insert(profileData)
+        .update(profileData)
+        .eq('id', userId)
         .select()
         .single();
 
       if (error) {
-        console.log('profileService - Error creating profile:', error.message);
+        console.log('profileService - Error completing profile:', error.message);
         return { success: false, error: error.message };
       }
 
-      console.log('profileService - Profile created successfully');
+      console.log('profileService - Profile completed successfully');
       return { success: true, profile: data };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.log('profileService - Exception creating profile:', errorMessage);
+      console.log('profileService - Exception completing profile:', errorMessage);
       return { success: false, error: errorMessage };
     }
   },

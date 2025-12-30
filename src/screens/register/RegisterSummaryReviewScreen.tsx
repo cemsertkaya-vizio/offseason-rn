@@ -72,13 +72,9 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
     setIsCreatingProfile(false);
 
     if (profileResult.success) {
-      console.log('RegisterSummaryReviewScreen - Profile created successfully');
+      console.log('RegisterSummaryReviewScreen - Profile created successfully, registration complete');
       clearRegistrationData();
-      Alert.alert(
-        'Success!',
-        'Your account has been created. Welcome to Offseason!',
-        [{ text: 'OK', onPress: () => {} }]
-      );
+      navigation.replace('Home');
     } else {
       console.log('RegisterSummaryReviewScreen - Error creating profile:', profileResult.error);
       Alert.alert(

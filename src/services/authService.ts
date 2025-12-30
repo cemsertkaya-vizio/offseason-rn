@@ -81,7 +81,9 @@ export const authService = {
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
+      console.log('authService - Getting current user...');
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('authService - Got user:', user?.id);
       return user;
     } catch (error) {
       console.log('authService - Error getting current user:', error);

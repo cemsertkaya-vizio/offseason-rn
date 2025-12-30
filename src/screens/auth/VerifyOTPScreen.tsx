@@ -79,8 +79,35 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
     const result = await authService.verifyPhoneOTP(phoneNumber, otp);
 
     if (result.success && result.user) {
-      console.log('VerifyOTPScreen - OTP verified, user authenticated, continuing registration');
-      navigation.navigate('RegisterPhysicalInfo');
+      console.log('VerifyOTPScreen - OTP verified successfully, user ID:', result.user.id);
+      
+      if (registrationData.firstName && registrationData.lastName && registrationData.phoneNumber) {
+        console.log('VerifyOTPScreen - Creating initial profile');
+        const profileResult = await profileService.createInitialProfile(
+          result.user.id,
+          {
+            firstName: registrationData.firstName,
+            lastName: registrationData.lastName,
+            phoneNumber: registrationData.phoneNumber,
+          }
+        );
+
+        if (profileResult.success) {
+          console.log('VerifyOTPScreen - Initial profile created, continuing to physical info');
+          navigation.navigate('RegisterPhysicalInfo');
+        } else {
+          console.log('VerifyOTPScreen - Error creating initial profile:', profileResult.error);
+          Alert.alert(
+            'Profile Error',
+            'Could not create your profile. Please try again.',
+            [{ text: 'OK' }]
+          );
+          setIsVerifying(false);
+        }
+      } else {
+        console.log('VerifyOTPScreen - Missing registration data, continuing anyway');
+        navigation.navigate('RegisterPhysicalInfo');
+      }
     } else {
       console.log('VerifyOTPScreen - Error verifying OTP:', result.error);
       setError(result.error || 'Invalid code. Please try again.');
