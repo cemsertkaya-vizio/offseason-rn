@@ -24,16 +24,16 @@ import { studioService } from '../../../services/studioService';
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
 
-type PilatesStudioScreenNavigationProp = NativeStackNavigationProp<
+type YogaStudioScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'PilatesStudio'
+  'YogaStudio'
 >;
 
-interface PilatesStudioScreenProps {
-  navigation: PilatesStudioScreenNavigationProp;
+interface YogaStudioScreenProps {
+  navigation: YogaStudioScreenNavigationProp;
 }
 
-export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
+export const YogaStudioScreen: React.FC<YogaStudioScreenProps> = ({
   navigation,
 }) => {
   const { user } = useAuth();
@@ -52,29 +52,29 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
         return;
       }
 
-      console.log('PilatesStudioScreen - Loading studios and saved data for user:', user.id);
+      console.log('YogaStudioScreen - Loading studios and saved data for user:', user.id);
       
-      const studiosResult = await studioService.getStudiosByActivity('pilates');
+      const studiosResult = await studioService.getStudiosByActivity('yoga');
       
       if (studiosResult.success && studiosResult.studios) {
         const studioNames = studiosResult.studios.map(studio => studio.name);
         studioNames.push('Other');
         setStudios(studioNames);
-        console.log('PilatesStudioScreen - Loaded studios:', studioNames);
+        console.log('YogaStudioScreen - Loaded studios:', studioNames);
       } else {
-        console.log('PilatesStudioScreen - Failed to load studios, using fallback');
-        setStudios(['Sage', 'Sage Pilates', 'Core40', 'Mighty Pilates', 'MNTSTUDIO', 'Other']);
+        console.log('YogaStudioScreen - Failed to load studios, using fallback');
+        setStudios(['Yoga', 'Yoga Flow', 'Yoga SF', 'Funky Door Yoga', 'MNTSTUDIO', 'Other']);
       }
 
       const result = await profileService.getOnboardingStatus(user.id);
 
-      if (result.success && result.profile?.onboarding_data?.pilates?.studio) {
-        console.log('PilatesStudioScreen - Pre-filling with saved studio');
-        const savedStudio = result.profile.onboarding_data.pilates.studio;
+      if (result.success && result.profile?.onboarding_data?.yoga?.studio) {
+        console.log('YogaStudioScreen - Pre-filling with saved studio');
+        const savedStudio = result.profile.onboarding_data.yoga.studio;
         
         const allStudios = studiosResult.success && studiosResult.studios 
           ? [...studiosResult.studios.map(s => s.name), 'Other']
-          : ['Sage', 'Sage Pilates', 'Core40', 'Mighty Pilates', 'MNTSTUDIO', 'Other'];
+          : ['Yoga', 'Yoga Flow', 'Yoga SF', 'Funky Door Yoga', 'MNTSTUDIO', 'Other'];
         
         if (allStudios.includes(savedStudio)) {
           setSelectedStudio(savedStudio);
@@ -109,28 +109,28 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
     const finalStudioName = selectedStudio === 'Other' ? customStudioName : (selectedStudio || searchText);
     
     setIsSaving(true);
-    console.log('PilatesStudioScreen - Saving progress with studio:', finalStudioName);
+    console.log('YogaStudioScreen - Saving progress with studio:', finalStudioName);
 
     const result = await profileService.getOnboardingStatus(user.id);
     const existingData = result.profile?.onboarding_data || {};
 
     const updatedData = {
       ...existingData,
-      pilates: {
-        ...existingData.pilates,
+      yoga: {
+        ...existingData.yoga,
         studio: finalStudioName,
       },
     };
 
     const saveResult = await profileService.updateOnboardingProgress(
       user.id,
-      'pilates_studio',
+      'yoga_studio',
       { onboarding_data: updatedData }
     );
 
     if (!saveResult.success) {
       setIsSaving(false);
-      console.log('PilatesStudioScreen - Error saving progress:', saveResult.error);
+      console.log('YogaStudioScreen - Error saving progress:', saveResult.error);
       Alert.alert(
         'Error',
         'Could not save your information. Please try again.',
@@ -139,9 +139,9 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
       return;
     }
 
-    console.log('PilatesStudioScreen - Progress saved, marking activity as completed');
+    console.log('YogaStudioScreen - Progress saved, marking activity as completed');
 
-    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Pilates');
+    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Yoga');
 
     if (!marked) {
       setIsSaving(false);
@@ -149,15 +149,15 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
       return;
     }
 
-    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Pilates');
+    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Yoga');
 
     setIsSaving(false);
 
     if (screen) {
-      console.log('PilatesStudioScreen - Navigating to next activity:', screen);
+      console.log('YogaStudioScreen - Navigating to next activity:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('PilatesStudioScreen - All activities complete, navigating to AnythingElse');
+      console.log('YogaStudioScreen - All activities complete, navigating to AnythingElse');
       navigation.navigate('AnythingElse');
     }
   };
@@ -190,7 +190,7 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../../assets/coach-pilates.png')}
+          source={require('../../../assets/coach-yoga.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -207,11 +207,11 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>PILATES</Text>
+        <Text style={styles.title}>YOGA</Text>
         <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
         <Text style={styles.question}>
-          Where is your pilates membership?
+          Where is your yoga membership?
         </Text>
 
         <View style={styles.searchContainer}>
@@ -260,7 +260,7 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
         {selectedStudio === 'Other' && (
           <View style={styles.customStudioContainer}>
             <Text style={styles.customStudioLabel}>
-              Enter your pilates studio:
+              Enter your yoga studio:
             </Text>
             <View style={styles.customStudioInputWrapper}>
               <TextInput
