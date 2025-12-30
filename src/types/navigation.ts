@@ -19,6 +19,8 @@ export type RootStackParamList = {
   RegisterGetFasterDetails: { goalType: 'sprint' | 'long-distance' | 'both' };
   RegisterGainMuscle: undefined;
   RegisterGainMuscleDetails: undefined;
+  RegisterLoseBodyFat: undefined;
+  RegisterLoseBodyFatDetails: undefined;
   RegisterTrainEvent: undefined;
   RegisterTrainEventDetails: { eventType: string };
   RegisterTrainEventTrainingStatus: { eventType: string; eventMonth: string; eventYear: number };

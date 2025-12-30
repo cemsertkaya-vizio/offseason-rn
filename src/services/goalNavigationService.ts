@@ -8,6 +8,7 @@ const GOAL_SCREEN_MAP: GoalScreenMap = {
   'get-stronger': 'RegisterGetStronger',
   'get-faster': 'RegisterGetFaster',
   'gain-muscle': 'RegisterGainMuscle',
+  'lose-fat': 'RegisterLoseBodyFat',
   'train-event': 'RegisterTrainEvent',
 };
 

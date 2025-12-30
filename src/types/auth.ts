@@ -42,6 +42,8 @@ export interface GoalData {
   };
   currentMuscleMass?: number | null;
   targetMuscleMass?: number | null;
+  currentBodyFat?: number | null;
+  targetBodyFat?: number | null;
   eventType?: string;
   eventMonth?: string;
   eventYear?: number;
