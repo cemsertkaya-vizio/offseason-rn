@@ -1,10 +1,11 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  ViewToken,
+  ScrollView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { colors } from '../constants/colors';
 
@@ -26,7 +27,9 @@ export const WeightPicker: React.FC<WeightPickerProps> = ({
   maxValue = 500,
   step = 5,
 }) => {
-  const flatListRef = useRef<FlatList>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const weights: number[] = [];
   for (let i = minValue; i <= maxValue; i += step) {
@@ -35,73 +38,92 @@ export const WeightPicker: React.FC<WeightPickerProps> = ({
 
   const initialIndex = Math.max(0, weights.indexOf(value));
 
-  const handleViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0) {
-        const middleItem = viewableItems[Math.floor(viewableItems.length / 2)];
-        if (middleItem && middleItem.item !== undefined) {
-          onChange(middleItem.item);
-        }
+  useEffect(() => {
+    if (scrollViewRef.current && !isScrolling) {
+      const index = weights.indexOf(value);
+      if (index !== -1) {
+        scrollViewRef.current.scrollTo({
+          y: index * ITEM_HEIGHT,
+          animated: false,
+        });
       }
+    }
+  }, []);
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!event || !event.nativeEvent || !event.nativeEvent.contentOffset) {
+        return;
+      }
+
+      const yOffset = event.nativeEvent.contentOffset.y;
+
+      setIsScrolling(true);
+      
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+
+      scrollTimeout.current = setTimeout(() => {
+        const index = Math.round(yOffset / ITEM_HEIGHT);
+        const clampedIndex = Math.max(0, Math.min(index, weights.length - 1));
+        
+        if (weights[clampedIndex] !== undefined && weights[clampedIndex] !== value) {
+          onChange(weights[clampedIndex]);
+        }
+        
+        setIsScrolling(false);
+      }, 100);
     },
-    [onChange]
+    [weights, onChange, value]
   );
 
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-    minimumViewTime: 100,
-  }).current;
-
-  const renderItem = useCallback(
-    ({ item, index }: { item: number; index: number }) => {
-      const isSelected = item === value;
-      const distance = Math.abs(weights.indexOf(value) - index);
-
-      return (
-        <View style={[styles.itemContainer, isSelected && styles.itemContainerSelected]}>
-          <Text
-            style={
-              isSelected
-                ? styles.selectedValueText
-                : distance === 1
-                ? [styles.itemText, styles.itemTextAdjacent]
-                : [styles.itemText, styles.itemTextFar]
-            }
-          >
-            {item}
-          </Text>
-        </View>
-      );
-    },
-    [value, weights]
-  );
-
-  const getItemLayout = (_: unknown, index: number) => ({
-    length: ITEM_HEIGHT,
-    offset: ITEM_HEIGHT * index,
-    index,
-  });
+  useEffect(() => {
+    return () => {
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.pickerContainer}>
-        <FlatList
-          ref={flatListRef}
-          data={weights}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.toString()}
+        <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           snapToInterval={ITEM_HEIGHT}
           decelerationRate="fast"
-          initialScrollIndex={initialIndex}
-          getItemLayout={getItemLayout}
-          onViewableItemsChanged={handleViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          extraData={value}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           contentContainerStyle={{
             paddingVertical: ITEM_HEIGHT,
           }}
-        />
+        >
+          {weights.map((item, index) => {
+            const isSelected = item === value;
+            const distance = Math.abs(weights.indexOf(value) - index);
+
+            return (
+              <View
+                key={item.toString()}
+                style={[styles.itemContainer, isSelected && styles.itemContainerSelected]}
+              >
+                <Text
+                  style={
+                    isSelected
+                      ? styles.selectedValueText
+                      : distance === 1
+                      ? [styles.itemText, styles.itemTextAdjacent]
+                      : [styles.itemText, styles.itemTextFar]
+                  }
+                >
+                  {item}
+                </Text>
+              </View>
+            );
+          })}
+        </ScrollView>
       </View>
       <Text style={styles.unitLabel}>lbs</Text>
     </View>
