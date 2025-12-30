@@ -1,4 +1,4 @@
-package com.offseasonapp
+package com.Offseason
 
 import android.app.Application
 import com.facebook.react.PackageList
