@@ -55,9 +55,10 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'flex-end',
     width: '100%',
     height: 65,
+    paddingBottom: 15,
   },
   textInput: {
     fontFamily: 'Roboto',
@@ -66,9 +67,8 @@ const styles = StyleSheet.create({
     color: colors.offWhite,
     textAlign: 'left',
     paddingHorizontal: 0,
-    paddingTop: 23,
-    paddingBottom: 15,
-    height: 65,
+    paddingVertical: 0,
+    flex: 1,
   },
   suffix: {
     fontFamily: 'Roboto',
