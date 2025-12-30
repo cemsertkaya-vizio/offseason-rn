@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  ScrollView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -54,15 +55,16 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
       }
 
       try {
-        const profile = await profileService.getProfile(user.id);
-        if (profile?.goal_data) {
-          const goalData = profile.goal_data as any;
-          if (goalData.pushType) {
-            setSelectedPush(goalData.pushType);
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedPushType = result.profile.onboarding_data.push_myself_type as string;
+          if (savedPushType) {
+            console.log('RegisterPushMyselfScreen - Loading saved push type:', savedPushType);
+            setSelectedPush(savedPushType);
           }
         }
       } catch (error) {
-        console.error('RegisterPushMyselfScreen - Failed to load existing data:', error);
+        console.log('RegisterPushMyselfScreen - Error loading existing data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -78,25 +80,31 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
     }
 
     if (!user) {
-      Alert.alert('Error', 'User not found. Please try again.');
+      Alert.alert('Error', 'Please log in to continue');
       return;
     }
 
+    console.log('RegisterPushMyselfScreen - Selected push type:', selectedPush);
+
     setIsSaving(true);
 
-    const goalData = {
-      pushType: selectedPush,
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      push_myself_type: selectedPush,
     };
 
-    updateRegistrationData({ goal_data: goalData });
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'push_myself_selected',
+      { onboarding_data: updatedData }
+    );
 
-    const saveResult = await profileService.updateProfile(user.id, {
-      goal_data: goalData,
-    });
-
-    if (!saveResult) {
+    if (!saveResult.success) {
       setIsSaving(false);
-      console.log('RegisterPushMyselfScreen - Error saving data');
+      console.log('RegisterPushMyselfScreen - Error saving push type:', saveResult.error);
       Alert.alert(
         'Error',
         'Could not save your information. Please try again.',
@@ -105,7 +113,7 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
       return;
     }
 
-    console.log('RegisterPushMyselfScreen - Data saved successfully');
+    console.log('RegisterPushMyselfScreen - Push type saved successfully');
 
     await goalNavigationService.markGoalCompleted(user.id, 'push-myself');
 
@@ -143,47 +151,51 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
           resizeMode="cover"
         />
         <LinearGradient
-          colors={['rgba(0, 0, 0, 0.1)', colors.background]}
+          colors={['rgba(0, 0, 0, 0.1)', colors.darkBrown]}
           locations={[0, 0.9454]}
           style={styles.gradient}
         />
       </View>
 
-      <Text style={styles.title}>PUSH MYSELF</Text>
-      <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
+      <View style={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.title}>PUSH MYSELF</Text>
+          <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.questionText}>How do you want to push yourself more?</Text>
+          <Text style={styles.question}>How do you want to push yourself more?</Text>
 
-        <View style={styles.optionsContainer}>
-          {PUSH_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.optionButton,
-                selectedPush === option.id && styles.optionButtonSelected,
-              ]}
-              onPress={() => setSelectedPush(option.id)}
-              activeOpacity={0.7}
-            >
-              <Text
+          <View style={styles.optionsContainer}>
+            {PUSH_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.id}
                 style={[
-                  styles.optionText,
-                  selectedPush === option.id && styles.optionTextSelected,
+                  styles.optionButton,
+                  selectedPush === option.id && styles.optionButtonSelected,
                 ]}
+                onPress={() => setSelectedPush(option.id)}
+                activeOpacity={0.7}
               >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedPush === option.id && styles.optionTextSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       </View>
 
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
         nextDisabled={!selectedPush || isSaving}
-        isLoading={isSaving}
       />
     </View>
   );
@@ -192,41 +204,49 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.darkBrown,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.darkBrown,
     justifyContent: 'center',
     alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,
     height: IMAGE_HEIGHT,
-    position: 'relative',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   backgroundImage: {
     width: '100%',
     height: '100%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
   },
   gradient: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
     top: 0,
     left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  content: {
+    flex: 1,
+    marginTop: IMAGE_HEIGHT - 30,
+  },
+  scrollContent: {
+    paddingBottom: 130,
+    paddingHorizontal: 42,
+    alignItems: 'center',
   },
   title: {
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: 'Bebas Neue',
     fontSize: 32,
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'center',
-    marginTop: 20,
-    letterSpacing: 0.5,
+    lineHeight: 38.78,
+    marginBottom: 11,
   },
   subtitle: {
     fontFamily: 'Roboto',
@@ -234,22 +254,20 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'center',
-    marginTop: 11,
+    marginBottom: 52,
   },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 42,
-    paddingTop: 52,
-  },
-  questionText: {
+  question: {
     fontFamily: 'Roboto',
     fontSize: 16,
     fontWeight: '400',
     color: colors.offWhite,
     marginBottom: 19,
+    width: '100%',
   },
   optionsContainer: {
+    width: '100%',
     gap: 16,
+    alignItems: 'center',
   },
   optionButton: {
     backgroundColor: colors.offWhite,
@@ -259,6 +277,8 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 318,
   },
   optionButtonSelected: {
     backgroundColor: colors.offWhite,
@@ -267,11 +287,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 16,
     fontWeight: '400',
-    color: colors.background,
+    color: colors.darkBrown,
     textAlign: 'center',
   },
   optionTextSelected: {
-    color: colors.background,
+    color: colors.darkBrown,
   },
 });
 
