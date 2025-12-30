@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +15,9 @@ import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { WeightPicker } from '../../../components/WeightPicker';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
+import { activityNavigationService } from '../../../services/activityNavigationService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 233;
@@ -35,18 +40,98 @@ interface LiftMaxState {
 export const WeightliftingMaxesScreen: React.FC<WeightliftingMaxesScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [maxes, setMaxes] = useState<LiftMaxState>({
     squat: 130,
     bench: 130,
     deadlift: 130,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('WeightliftingMaxesScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.weightlifting?.maxes) {
+        console.log('WeightliftingMaxesScreen - Pre-filling with saved maxes');
+        setMaxes(result.profile.onboarding_data.weightlifting.maxes);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('WeightliftingMaxesScreen - Next pressed with maxes:', maxes);
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('WeightliftingMaxesScreen - Saving progress with maxes:', maxes);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      weightlifting: {
+        ...existingData.weightlifting,
+        maxes,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'weightlifting_maxes',
+      { onboarding_data: updatedData }
+    );
+
+    if (!saveResult.success) {
+      setIsSaving(false);
+      console.log('WeightliftingMaxesScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('WeightliftingMaxesScreen - Progress saved, marking activity as completed');
+
+    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Weightlifting');
+
+    if (!marked) {
+      setIsSaving(false);
+      Alert.alert('Error', 'Could not complete activity. Please try again.', [{ text: 'OK' }]);
+      return;
+    }
+
+    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Weightlifting');
+
+    setIsSaving(false);
+
+    if (screen) {
+      console.log('WeightliftingMaxesScreen - Navigating to next activity:', screen);
+      navigation.navigate(screen as any);
+    } else {
+      console.log('WeightliftingMaxesScreen - All activities complete, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
+    }
   };
 
   const updateMax = (lift: keyof LiftMaxState, value: number) => {
@@ -55,6 +140,14 @@ export const WeightliftingMaxesScreen: React.FC<WeightliftingMaxesScreenProps> =
       [lift]: value,
     }));
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -124,6 +217,7 @@ export const WeightliftingMaxesScreen: React.FC<WeightliftingMaxesScreenProps> =
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
+        nextDisabled={isSaving}
       />
     </View>
   );
@@ -133,6 +227,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

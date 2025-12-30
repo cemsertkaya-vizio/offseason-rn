@@ -54,7 +54,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ navigation }
         }
       }
 
-      const initialRoute = navigationService.determineInitialRoute(user, profile);
+      const initialRoute = await navigationService.determineInitialRoute(user, profile);
       console.log('AppLoadingScreen - Navigating to:', initialRoute);
 
       hasNavigated.current = true;

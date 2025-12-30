@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,16 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -38,15 +42,75 @@ const EQUIPMENT_OPTIONS = [
 export const WeightliftingEquipmentScreen: React.FC<WeightliftingEquipmentScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('WeightliftingEquipmentScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.weightlifting?.equipment) {
+        console.log('WeightliftingEquipmentScreen - Pre-filling with saved equipment');
+        setSelectedEquipment(result.profile.onboarding_data.weightlifting.equipment);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('WeightliftingEquipmentScreen - Next pressed with equipment:', selectedEquipment);
-    navigation.navigate('WeightliftingMaxes');
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('WeightliftingEquipmentScreen - Saving progress with equipment:', selectedEquipment);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      weightlifting: {
+        ...existingData.weightlifting,
+        equipment: selectedEquipment,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'weightlifting_equipment',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (saveResult.success) {
+      console.log('WeightliftingEquipmentScreen - Progress saved, navigating to maxes');
+      navigation.navigate('WeightliftingMaxes');
+    } else {
+      console.log('WeightliftingEquipmentScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const toggleEquipment = (equipmentId: string) => {
@@ -62,10 +126,18 @@ export const WeightliftingEquipmentScreen: React.FC<WeightliftingEquipmentScreen
     });
   };
 
-  const isNextDisabled = selectedEquipment.length === 0;
+  const isNextDisabled = selectedEquipment.length === 0 || isSaving;
 
   const leftColumn = EQUIPMENT_OPTIONS.filter((_, index) => index % 2 === 0);
   const rightColumn = EQUIPMENT_OPTIONS.filter((_, index) => index % 2 === 1);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -156,6 +228,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

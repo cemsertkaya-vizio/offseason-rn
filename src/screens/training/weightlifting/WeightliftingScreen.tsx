@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,16 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -36,18 +40,86 @@ const OPTIONS = [
 export const WeightliftingScreen: React.FC<WeightliftingScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [selectedStyle, setSelectedStyle] = useState<TrainingStyle>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('WeightliftingScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.weightlifting?.training_style) {
+        console.log('WeightliftingScreen - Pre-filling with saved training style');
+        setSelectedStyle(result.profile.onboarding_data.weightlifting.training_style);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('WeightliftingScreen - Next pressed with style:', selectedStyle);
-    navigation.navigate('WeightliftingEquipment');
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('WeightliftingScreen - Saving progress with training style:', selectedStyle);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      weightlifting: {
+        ...existingData.weightlifting,
+        training_style: selectedStyle,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'weightlifting_style',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (saveResult.success) {
+      console.log('WeightliftingScreen - Progress saved, navigating to equipment');
+      navigation.navigate('WeightliftingEquipment');
+    } else {
+      console.log('WeightliftingScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
-  const isNextDisabled = selectedStyle === null;
+  const isNextDisabled = selectedStyle === null || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -113,6 +185,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

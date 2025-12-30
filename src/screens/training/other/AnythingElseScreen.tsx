@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,16 @@ import {
   Image,
   TextInput,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -27,18 +31,81 @@ interface AnythingElseScreenProps {
 }
 
 export const AnythingElseScreen: React.FC<AnythingElseScreenProps> = ({ navigation }) => {
+  const { user } = useAuth();
   const [additionalInfo, setAdditionalInfo] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('AnythingElseScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.anything_else) {
+        console.log('AnythingElseScreen - Pre-filling with saved info');
+        setAdditionalInfo(result.profile.onboarding_data.anything_else);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('AnythingElseScreen - Next pressed with info:', additionalInfo);
-    navigation.navigate('RegisterSummaryReview');
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('AnythingElseScreen - Saving progress with info:', additionalInfo);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      anything_else: additionalInfo.trim() || null,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'anything_else_complete',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (saveResult.success) {
+      console.log('AnythingElseScreen - Progress saved, navigating to RegisterGoals');
+      navigation.navigate('RegisterGoals');
+    } else {
+      console.log('AnythingElseScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
-  const isNextDisabled = additionalInfo.trim() === '';
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -84,7 +151,7 @@ export const AnythingElseScreen: React.FC<AnythingElseScreenProps> = ({ navigati
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
-        nextDisabled={isNextDisabled}
+        nextDisabled={isSaving}
       />
     </View>
   );
@@ -94,6 +161,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +15,9 @@ import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { ScrollPicker } from '../../../components/ScrollPicker';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
+import { activityNavigationService } from '../../../services/activityNavigationService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 270;
@@ -34,18 +39,112 @@ const STROKE_OPTIONS = ['Butterfly', 'Freestyle', 'Backstroke'];
 export const SwimmingExampleScreen: React.FC<SwimmingExampleScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [sets, setSets] = useState(8);
   const [meters, setMeters] = useState(100);
   const [seconds, setSeconds] = useState(90);
   const [stroke, setStroke] = useState('Freestyle');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('SwimmingExampleScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.swimming?.example) {
+        console.log('SwimmingExampleScreen - Pre-filling with saved example');
+        const example = result.profile.onboarding_data.swimming.example;
+        setSets(example.sets);
+        setMeters(example.meters);
+        setSeconds(example.seconds);
+        setStroke(example.stroke);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('SwimmingExampleScreen - Next pressed:', { sets, meters, seconds, stroke });
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    const exampleData = { sets, meters, seconds, stroke };
+
+    setIsSaving(true);
+    console.log('SwimmingExampleScreen - Saving progress with example:', exampleData);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      swimming: {
+        ...existingData.swimming,
+        example: exampleData,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'swimming_example',
+      { onboarding_data: updatedData }
+    );
+
+    if (!saveResult.success) {
+      setIsSaving(false);
+      console.log('SwimmingExampleScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('SwimmingExampleScreen - Progress saved, marking activity as completed');
+
+    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Swimming');
+
+    if (!marked) {
+      setIsSaving(false);
+      Alert.alert('Error', 'Could not complete activity. Please try again.', [{ text: 'OK' }]);
+      return;
+    }
+
+    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Swimming');
+
+    setIsSaving(false);
+
+    if (screen) {
+      console.log('SwimmingExampleScreen - Navigating to next activity:', screen);
+      navigation.navigate(screen as any);
+    } else {
+      console.log('SwimmingExampleScreen - All activities complete, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -117,6 +216,7 @@ export const SwimmingExampleScreen: React.FC<SwimmingExampleScreenProps> = ({
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
+        nextDisabled={isSaving}
       />
     </View>
   );
@@ -126,6 +226,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

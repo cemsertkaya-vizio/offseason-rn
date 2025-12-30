@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,17 @@ import {
   Image,
   ScrollView,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
+import { activityNavigationService } from '../../../services/activityNavigationService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -39,10 +44,43 @@ const STUDIOS = [
 export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [searchText, setSearchText] = useState('');
   const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [customStudioName, setCustomStudioName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('PilatesStudioScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.pilates?.studio) {
+        console.log('PilatesStudioScreen - Pre-filling with saved studio');
+        const savedStudio = result.profile.onboarding_data.pilates.studio;
+        
+        if (STUDIOS.includes(savedStudio)) {
+          setSelectedStudio(savedStudio);
+          setSearchText(savedStudio);
+        } else {
+          setSelectedStudio('Other');
+          setSearchText('Other');
+          setCustomStudioName(savedStudio);
+        }
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const filteredStudios = STUDIOS.filter((studio) =>
     studio.toLowerCase().includes(searchText.toLowerCase())
@@ -52,10 +90,66 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     const finalStudioName = selectedStudio === 'Other' ? customStudioName : (selectedStudio || searchText);
-    console.log('PilatesStudioScreen - Next pressed with studio:', finalStudioName);
-    // navigation.navigate('NextScreen');
+    
+    setIsSaving(true);
+    console.log('PilatesStudioScreen - Saving progress with studio:', finalStudioName);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      pilates: {
+        ...existingData.pilates,
+        studio: finalStudioName,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'pilates_studio',
+      { onboarding_data: updatedData }
+    );
+
+    if (!saveResult.success) {
+      setIsSaving(false);
+      console.log('PilatesStudioScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('PilatesStudioScreen - Progress saved, marking activity as completed');
+
+    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Pilates');
+
+    if (!marked) {
+      setIsSaving(false);
+      Alert.alert('Error', 'Could not complete activity. Please try again.', [{ text: 'OK' }]);
+      return;
+    }
+
+    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Pilates');
+
+    setIsSaving(false);
+
+    if (screen) {
+      console.log('PilatesStudioScreen - Navigating to next activity:', screen);
+      navigation.navigate(screen as any);
+    } else {
+      console.log('PilatesStudioScreen - All activities complete, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
+    }
   };
 
   const handleStudioSelect = (studio: string) => {
@@ -72,7 +166,15 @@ export const PilatesStudioScreen: React.FC<PilatesStudioScreenProps> = ({
     }
   };
 
-  const isNextDisabled = selectedStudio === 'Other' ? !customStudioName.trim() : !searchText.trim();
+  const isNextDisabled = selectedStudio === 'Other' ? !customStudioName.trim() : !searchText.trim() || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -176,6 +278,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

@@ -18,6 +18,7 @@ import { NavigationArrows } from '../../components/NavigationArrows';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../contexts/AuthContext';
 import { profileService } from '../../services/profileService';
+import { activityNavigationService } from '../../services/activityNavigationService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -113,24 +114,46 @@ export const RegisterPreferredDaysScreen: React.FC<RegisterPreferredDaysScreenPr
     setIsSaving(true);
     console.log('RegisterPreferredDaysScreen - Saving progress with preferred days:', preferredDays);
 
+    const profileResult = await profileService.getOnboardingStatus(user.id);
+    const existingData = profileResult.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      _completed_activities: [],
+    };
+
     const result = await profileService.updateOnboardingProgress(
       user.id,
       'preferred_days',
-      { preferred_days: preferredDays }
+      { 
+        preferred_days: preferredDays,
+        onboarding_data: updatedData,
+      }
     );
 
-    setIsSaving(false);
-
-    if (result.success) {
-      console.log('RegisterPreferredDaysScreen - Progress saved, navigating to weightlifting');
-      navigation.navigate('Weightlifting');
-    } else {
+    if (!result.success) {
+      setIsSaving(false);
       console.log('RegisterPreferredDaysScreen - Error saving progress:', result.error);
       Alert.alert(
         'Error',
         'Could not save your information. Please try again.',
         [{ text: 'OK' }]
       );
+      return;
+    }
+
+    console.log('RegisterPreferredDaysScreen - Progress saved, checking for next activity');
+
+    const { screen } = await activityNavigationService.getNextActivityScreen(user.id);
+
+    setIsSaving(false);
+
+    if (screen) {
+      console.log('RegisterPreferredDaysScreen - Navigating to activity:', screen);
+      navigation.navigate(screen as any);
+    } else {
+      console.log('RegisterPreferredDaysScreen - No activities with screens, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 

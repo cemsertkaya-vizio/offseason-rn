@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { colors } from '../../../constants/colors';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
+import { activityNavigationService } from '../../../services/activityNavigationService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -37,23 +42,111 @@ const OPTIONS = [
 export const PilatesScreen: React.FC<PilatesScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
   const [selectedMembership, setSelectedMembership] = useState<PilatesMembership>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('PilatesScreen - Loading saved data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile?.onboarding_data?.pilates?.membership) {
+        console.log('PilatesScreen - Pre-filling with saved membership');
+        setSelectedMembership(result.profile.onboarding_data.pilates.membership);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadSavedData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    console.log('PilatesScreen - Next pressed with membership:', selectedMembership);
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    setIsSaving(true);
+    console.log('PilatesScreen - Saving progress with membership:', selectedMembership);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      pilates: {
+        ...existingData.pilates,
+        membership: selectedMembership,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'pilates_membership',
+      { onboarding_data: updatedData }
+    );
+
+    if (!saveResult.success) {
+      setIsSaving(false);
+      console.log('PilatesScreen - Error saving progress:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     if (selectedMembership === 'yes') {
+      setIsSaving(false);
+      console.log('PilatesScreen - Has membership, navigating to studio screen');
       navigation.navigate('PilatesStudio');
     } else {
-      // For other options, navigate to a different screen or complete the flow
-      console.log('No studio membership - proceeding to next step');
+      console.log('PilatesScreen - No studio membership, marking activity as completed');
+
+      const marked = await activityNavigationService.markActivityCompleted(user.id, 'Pilates');
+
+      if (!marked) {
+        setIsSaving(false);
+        Alert.alert('Error', 'Could not complete activity. Please try again.', [{ text: 'OK' }]);
+        return;
+      }
+
+      const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Pilates');
+
+      setIsSaving(false);
+
+      if (screen) {
+        console.log('PilatesScreen - Navigating to next activity:', screen);
+        navigation.navigate(screen as any);
+      } else {
+        console.log('PilatesScreen - All activities complete, navigating to AnythingElse');
+        navigation.navigate('AnythingElse');
+      }
     }
   };
 
-  const isNextDisabled = selectedMembership === null;
+  const isNextDisabled = selectedMembership === null || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -119,6 +212,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,
