@@ -38,6 +38,8 @@ export type RootStackParamList = {
   RunningStyle: undefined;
   RunningExample: undefined;
   RunningDistance: undefined;
+  Sports: undefined;
+  SportsType: undefined;
   Other: undefined;
   AnythingElse: undefined;
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppLoadingScreen, HomeScreen, StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterPreferencesScreen, RegisterScheduleScreen, RegisterPreferredDaysScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen, RegisterGetFasterScreen, RegisterGetFasterDetailsScreen, RegisterGainMuscleScreen, RegisterGainMuscleDetailsScreen, RegisterTrainEventScreen, RegisterTrainEventDetailsScreen, RegisterTrainEventTrainingStatusScreen, RegisterTrainEventCurrentStatusScreen, RegisterSummaryReviewScreen } from '../screens';
-import { WeightliftingScreen, WeightliftingEquipmentScreen, WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, RunningScreen, RunningStyleScreen, RunningExampleScreen, RunningDistanceScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
+import { WeightliftingScreen, WeightliftingEquipmentScreen, WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, YogaScreen, YogaStudioScreen, RunningScreen, RunningStyleScreen, RunningExampleScreen, RunningDistanceScreen, SportsScreen, SportsTypeScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
 import { LoginScreen, VerifyOTPScreen } from '../screens/auth';
 import { RootStackParamList } from '../types/navigation';
 
@@ -10,7 +10,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="AppLoading"
+      initialRouteName="RunningDistance"
       screenOptions={{
         headerShown: false,
       }}>
@@ -47,10 +47,14 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="SwimmingExample" component={SwimmingExampleScreen} />
       <Stack.Screen name="Pilates" component={PilatesScreen} />
       <Stack.Screen name="PilatesStudio" component={PilatesStudioScreen} />
+      <Stack.Screen name="Yoga" component={YogaScreen} />
+      <Stack.Screen name="YogaStudio" component={YogaStudioScreen} />
       <Stack.Screen name="Running" component={RunningScreen} />
       <Stack.Screen name="RunningStyle" component={RunningStyleScreen} />
       <Stack.Screen name="RunningExample" component={RunningExampleScreen} />
       <Stack.Screen name="RunningDistance" component={RunningDistanceScreen} />
+      <Stack.Screen name="Sports" component={SportsScreen} />
+      <Stack.Screen name="SportsType" component={SportsTypeScreen} />
       <Stack.Screen name="Other" component={OtherScreen} />
       <Stack.Screen name="AnythingElse" component={AnythingElseScreen} />
     </Stack.Navigator>
