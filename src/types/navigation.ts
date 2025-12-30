@@ -32,6 +32,10 @@ export type RootStackParamList = {
   SwimmingExample: undefined;
   Pilates: undefined;
   PilatesStudio: undefined;
+  Running: undefined;
+  RunningStyle: undefined;
+  RunningExample: undefined;
+  RunningDistance: undefined;
   Other: undefined;
   AnythingElse: undefined;
 };

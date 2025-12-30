@@ -8,6 +8,7 @@ const ACTIVITY_SCREEN_MAP: ActivityScreenMap = {
   'Weightlifting': 'Weightlifting',
   'Swimming': 'Swimming',
   'Pilates': 'Pilates',
+  'Running': 'Running',
   'Other': 'Other',
 };
 

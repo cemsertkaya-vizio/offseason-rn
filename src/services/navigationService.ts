@@ -13,6 +13,7 @@ export type InitialRoute =
   | 'Weightlifting'
   | 'Swimming'
   | 'Pilates'
+  | 'Running'
   | 'Other'
   | 'AnythingElse'
   | 'RegisterGoals'
@@ -74,6 +75,11 @@ export const navigationService = {
       case 'pilates_membership':
       case 'pilates_studio':
       case 'activity_pilates_completed':
+      case 'running_location':
+      case 'running_style':
+      case 'running_example':
+      case 'running_distance':
+      case 'activity_running_completed':
       case 'other_activity':
       case 'activity_other_completed':
       case 'anything_else':
@@ -147,6 +153,11 @@ export const navigationService = {
       pilates_membership: 72,
       pilates_studio: 74,
       activity_pilates_completed: 76,
+      running_location: 72,
+      running_style: 74,
+      running_example: 76,
+      running_distance: 76,
+      activity_running_completed: 76,
       other_activity: 72,
       activity_other_completed: 76,
       anything_else: 78,
