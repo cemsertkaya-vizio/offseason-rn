@@ -7,6 +7,7 @@ interface NavigationArrowsProps {
   onNextPress: () => void;
   backDisabled?: boolean;
   nextDisabled?: boolean;
+  hideBack?: boolean;
 }
 
 export const NavigationArrows: React.FC<NavigationArrowsProps> = ({
@@ -14,20 +15,25 @@ export const NavigationArrows: React.FC<NavigationArrowsProps> = ({
   onNextPress,
   backDisabled = false,
   nextDisabled = false,
+  hideBack = false,
 }) => {
   return (
     <View style={styles.container}>
       <View style={styles.arrowsContainer}>
-        <TouchableOpacity
-          style={[styles.arrowButton, backDisabled && styles.arrowButtonDisabled]}
-          onPress={onBackPress}
-          disabled={backDisabled}
-          activeOpacity={0.7}>
-          <View style={styles.arrowLeft}>
-            <View style={[styles.arrowHead, styles.arrowHeadLeft]} />
-            <View style={styles.arrowLine} />
-          </View>
-        </TouchableOpacity>
+        {!hideBack ? (
+          <TouchableOpacity
+            style={[styles.arrowButton, backDisabled && styles.arrowButtonDisabled]}
+            onPress={onBackPress}
+            disabled={backDisabled}
+            activeOpacity={0.7}>
+            <View style={styles.arrowLeft}>
+              <View style={[styles.arrowHead, styles.arrowHeadLeft]} />
+              <View style={styles.arrowLine} />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.placeholder} />
+        )}
 
         <View style={styles.spacer} />
 
@@ -69,6 +75,10 @@ const styles = StyleSheet.create({
   },
   arrowButtonDisabled: {
     opacity: 0.5,
+  },
+  placeholder: {
+    width: 51,
+    height: 51,
   },
   spacer: {
     width: 226,

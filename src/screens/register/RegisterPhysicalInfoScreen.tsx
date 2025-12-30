@@ -179,6 +179,7 @@ export const RegisterPhysicalInfoScreen: React.FC<RegisterPhysicalInfoScreenProp
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
+        hideBack={true}
         nextDisabled={isNextDisabled}
       />
     </View>
