@@ -33,6 +33,15 @@ export interface RegistrationData {
 export interface GoalData {
   type: string;
   details?: string;
+  muscleGroups?: string[];
+  goalType?: string;
+  targetPace?: {
+    minutes: number;
+    seconds: number;
+    unit: string;
+  };
+  currentMuscleMass?: number | null;
+  targetMuscleMass?: number | null;
   eventType?: string;
   eventMonth?: string;
   eventYear?: number;

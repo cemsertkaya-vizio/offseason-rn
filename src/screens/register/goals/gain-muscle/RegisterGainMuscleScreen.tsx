@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +16,9 @@ import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { ScrollPicker } from '../../../../components/ScrollPicker';
 import { colors } from '../../../../constants/colors';
+import { useRegistration } from '../../../../contexts/RegistrationContext';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { profileService } from '../../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -32,19 +37,89 @@ const MUSCLE_MASS_OPTIONS = Array.from({ length: 200 }, (_, i) => i + 1);
 export const RegisterGainMuscleScreen: React.FC<RegisterGainMuscleScreenProps> = ({
   navigation,
 }) => {
+  const { updateRegistrationData, registrationData } = useRegistration();
+  const { user } = useAuth();
   const [muscleMass, setMuscleMass] = useState(65);
   const [dontKnow, setDontKnow] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedMuscleMass = result.profile.onboarding_data.gain_muscle_current_mass as number;
+          const savedDontKnow = result.profile.onboarding_data.gain_muscle_dont_know as boolean;
+          if (savedMuscleMass) {
+            console.log('RegisterGainMuscleScreen - Loading saved muscle mass:', savedMuscleMass);
+            setMuscleMass(savedMuscleMass);
+          }
+          if (savedDontKnow !== undefined) {
+            setDontKnow(savedDontKnow);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterGainMuscleScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     if (dontKnow) {
       console.log('RegisterGainMuscleScreen - User does not know muscle mass');
     } else {
       console.log('RegisterGainMuscleScreen - Current muscle mass:', muscleMass, 'lbs');
     }
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      gain_muscle_current_mass: dontKnow ? null : muscleMass,
+      gain_muscle_dont_know: dontKnow,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'gain_muscle_current_mass_selected',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (!saveResult.success) {
+      console.log('RegisterGainMuscleScreen - Error saving muscle mass:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterGainMuscleScreen - Muscle mass saved successfully');
     navigation.navigate('RegisterGainMuscleDetails');
   };
 
@@ -58,6 +133,14 @@ export const RegisterGainMuscleScreen: React.FC<RegisterGainMuscleScreenProps> =
       setDontKnow(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -115,6 +198,7 @@ export const RegisterGainMuscleScreen: React.FC<RegisterGainMuscleScreenProps> =
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
+        nextDisabled={isSaving}
       />
     </View>
   );
@@ -124,6 +208,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

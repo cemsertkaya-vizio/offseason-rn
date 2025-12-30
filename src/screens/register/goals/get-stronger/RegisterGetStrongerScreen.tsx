@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { colors } from '../../../../constants/colors';
+import { useRegistration } from '../../../../contexts/RegistrationContext';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { profileService } from '../../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -40,18 +45,83 @@ const MUSCLE_GROUP_OPTIONS = [
 export const RegisterGetStrongerScreen: React.FC<RegisterGetStrongerScreenProps> = ({
   navigation,
 }) => {
+  const { updateRegistrationData, registrationData } = useRegistration();
+  const { user } = useAuth();
   const [selectedMuscleGroups, setSelectedMuscleGroups] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedMuscleGroups = result.profile.onboarding_data.get_stronger_muscle_groups as string[];
+          if (savedMuscleGroups && savedMuscleGroups.length > 0) {
+            console.log('RegisterGetStrongerScreen - Loading saved muscle groups:', savedMuscleGroups);
+            setSelectedMuscleGroups(savedMuscleGroups);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterGetStrongerScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     console.log('RegisterGetStrongerScreen - Next pressed with muscle groups:', selectedMuscleGroups);
     const selectedLabels = MUSCLE_GROUP_OPTIONS
       .filter((opt) => selectedMuscleGroups.includes(opt.id))
       .map((opt) => opt.label);
     console.log('RegisterGetStrongerScreen - Selected muscle group labels:', selectedLabels);
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      get_stronger_muscle_groups: selectedMuscleGroups,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'get_stronger_muscle_groups_selected',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (!saveResult.success) {
+      console.log('RegisterGetStrongerScreen - Error saving muscle groups:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterGetStrongerScreen - Muscle groups saved successfully');
     navigation.navigate('RegisterGetStrongerDetails');
   };
 
@@ -64,10 +134,18 @@ export const RegisterGetStrongerScreen: React.FC<RegisterGetStrongerScreenProps>
     });
   };
 
-  const isNextDisabled = selectedMuscleGroups.length === 0;
+  const isNextDisabled = selectedMuscleGroups.length === 0 || isSaving;
 
   const leftColumn = MUSCLE_GROUP_OPTIONS.filter((_, index) => index % 2 === 0);
   const rightColumn = MUSCLE_GROUP_OPTIONS.filter((_, index) => index % 2 === 1);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -160,6 +238,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

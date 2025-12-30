@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { colors } from '../../../../constants/colors';
+import { useRegistration } from '../../../../contexts/RegistrationContext';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { profileService } from '../../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -39,28 +44,103 @@ const EVENT_OPTIONS = [
 export const RegisterTrainEventScreen: React.FC<RegisterTrainEventScreenProps> = ({
   navigation,
 }) => {
+  const { updateRegistrationData, registrationData } = useRegistration();
+  const { user } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedEventType = result.profile.onboarding_data.train_event_type as string;
+          if (savedEventType) {
+            console.log('RegisterTrainEventScreen - Loading saved event type:', savedEventType);
+            setSelectedEvent(savedEventType);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterTrainEventScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    if (selectedEvent) {
-      console.log('RegisterTrainEventScreen - Selected event:', selectedEvent);
-      navigation.navigate('RegisterTrainEventDetails', { eventType: selectedEvent });
+  const handleNext = async () => {
+    if (!selectedEvent) {
+      return;
     }
+
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
+    console.log('RegisterTrainEventScreen - Selected event:', selectedEvent);
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      train_event_type: selectedEvent,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'train_event_type_selected',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (!saveResult.success) {
+      console.log('RegisterTrainEventScreen - Error saving event type:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterTrainEventScreen - Event type saved successfully');
+    navigation.navigate('RegisterTrainEventDetails', { eventType: selectedEvent });
   };
 
   const handleEventSelect = (eventId: string) => {
     setSelectedEvent(eventId);
   };
 
-  const isNextDisabled = !selectedEvent;
+  const isNextDisabled = !selectedEvent || isSaving;
 
   const leftColumn = EVENT_OPTIONS.slice(0, 3);
   const rightColumn = EVENT_OPTIONS.slice(3, 6);
   const bottomOption = EVENT_OPTIONS[6];
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -156,6 +236,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

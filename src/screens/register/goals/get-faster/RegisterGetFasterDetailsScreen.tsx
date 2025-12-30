@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +16,11 @@ import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { ScrollPicker } from '../../../../components/ScrollPicker';
 import { colors } from '../../../../constants/colors';
+import { useRegistration } from '../../../../contexts/RegistrationContext';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { profileService } from '../../../../services/profileService';
+import { goalNavigationService } from '../../../../services/goalNavigationService';
+import type { GoalData } from '../../../../types/auth';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -44,23 +51,130 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
   route,
 }) => {
   const { goalType } = route.params;
+  const { updateRegistrationData, registrationData } = useRegistration();
+  const { user } = useAuth();
   const [minutes, setMinutes] = useState(7);
   const [seconds, setSeconds] = useState(30);
   const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>('mile');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedPace = result.profile.onboarding_data.get_faster_target_pace as any;
+          if (savedPace) {
+            console.log('RegisterGetFasterDetailsScreen - Loading saved pace:', savedPace);
+            setMinutes(savedPace.minutes || 7);
+            setSeconds(savedPace.seconds || 30);
+            setDistanceUnit(savedPace.unit || 'mile');
+          }
+        }
+      } catch (error) {
+        console.log('RegisterGetFasterDetailsScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     console.log('RegisterGetFasterDetailsScreen - Goal type:', goalType);
     console.log('RegisterGetFasterDetailsScreen - Target pace:', {
       minutes,
       seconds,
       unit: distanceUnit,
     });
-    navigation.navigate('RegisterSummaryReview');
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const goalData: GoalData = {
+      type: 'get-faster',
+      goalType: goalType,
+      targetPace: {
+        minutes,
+        seconds,
+        unit: distanceUnit,
+      },
+    };
+
+    const currentGoals = (registrationData.goals || []) as GoalData[];
+    const updatedGoals = currentGoals.filter(g => g.type !== 'get-faster');
+    updatedGoals.push(goalData);
+
+    updateRegistrationData({ goals: updatedGoals });
+
+    const updatedData = {
+      ...existingData,
+      get_faster_target_pace: {
+        minutes,
+        seconds,
+        unit: distanceUnit,
+      },
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'get_faster_details_completed',
+      { onboarding_data: updatedData }
+    );
+
+    if (!saveResult.success) {
+      setIsSaving(false);
+      console.log('RegisterGetFasterDetailsScreen - Error saving details:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterGetFasterDetailsScreen - Details saved successfully');
+
+    await goalNavigationService.markGoalCompleted(user.id, 'get-faster');
+
+    const { screen } = await goalNavigationService.getNextGoalScreen(user.id);
+
+    setIsSaving(false);
+
+    if (screen) {
+      console.log('RegisterGetFasterDetailsScreen - Navigating to next goal screen:', screen);
+      navigation.navigate(screen as any);
+    } else {
+      console.log('RegisterGetFasterDetailsScreen - All goals completed, navigating to summary');
+      navigation.navigate('RegisterSummaryReview');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -122,6 +236,7 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
+        nextDisabled={isSaving}
       />
     </View>
   );
@@ -131,6 +246,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

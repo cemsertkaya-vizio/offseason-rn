@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +16,11 @@ import type { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { colors } from '../../../../constants/colors';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { useRegistration } from '../../../../contexts/RegistrationContext';
+import { profileService } from '../../../../services/profileService';
+import { goalNavigationService } from '../../../../services/goalNavigationService';
+import type { GoalData } from '../../../../types/auth';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -38,26 +45,117 @@ export const RegisterTrainEventTrainingStatusScreen: React.FC<RegisterTrainEvent
   route,
 }) => {
   const { eventType, eventMonth, eventYear } = route.params;
+  const { user } = useAuth();
+  const { updateRegistrationData, registrationData } = useRegistration();
   const [hasStartedTraining, setHasStartedTraining] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedStatus = result.profile.onboarding_data.train_event_has_started as boolean;
+          if (savedStatus !== undefined) {
+            console.log('RegisterTrainEventTrainingStatusScreen - Loading saved status:', savedStatus);
+            setHasStartedTraining(savedStatus);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterTrainEventTrainingStatusScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
-    if (hasStartedTraining !== null) {
-      console.log('RegisterTrainEventTrainingStatusScreen - Event type:', eventType);
-      console.log('RegisterTrainEventTrainingStatusScreen - Event date:', eventMonth, eventYear);
-      console.log('RegisterTrainEventTrainingStatusScreen - Has started training:', hasStartedTraining);
-      
-      if (hasStartedTraining) {
-        navigation.navigate('RegisterTrainEventCurrentStatus', {
-          eventType,
-          eventMonth,
-          eventYear,
-        });
+  const handleNext = async () => {
+    if (hasStartedTraining === null || !user) {
+      if (!user) {
+        Alert.alert('Error', 'Please log in to continue');
+      }
+      return;
+    }
+
+    console.log('RegisterTrainEventTrainingStatusScreen - Event type:', eventType);
+    console.log('RegisterTrainEventTrainingStatusScreen - Event date:', eventMonth, eventYear);
+    console.log('RegisterTrainEventTrainingStatusScreen - Has started training:', hasStartedTraining);
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      train_event_has_started: hasStartedTraining,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'train_event_training_status_selected',
+      { onboarding_data: updatedData }
+    );
+
+    if (!saveResult.success) {
+      setIsSaving(false);
+      console.log('RegisterTrainEventTrainingStatusScreen - Error saving status:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterTrainEventTrainingStatusScreen - Status saved successfully');
+
+    if (hasStartedTraining) {
+      setIsSaving(false);
+      navigation.navigate('RegisterTrainEventCurrentStatus', {
+        eventType,
+        eventMonth,
+        eventYear,
+      });
+    } else {
+      const goalData: GoalData = {
+        type: 'train-event',
+        eventType: eventType,
+        eventMonth: eventMonth,
+        eventYear: eventYear,
+        trainingStatus: 'not-started',
+      };
+
+      const currentGoals = (registrationData.goals || []) as GoalData[];
+      const updatedGoals = currentGoals.filter(g => g.type !== 'train-event');
+      updatedGoals.push(goalData);
+
+      updateRegistrationData({ goals: updatedGoals });
+
+      await goalNavigationService.markGoalCompleted(user.id, 'train-event');
+
+      const { screen } = await goalNavigationService.getNextGoalScreen(user.id);
+
+      setIsSaving(false);
+
+      if (screen) {
+        console.log('RegisterTrainEventTrainingStatusScreen - Navigating to next goal screen:', screen);
+        navigation.navigate(screen as any);
       } else {
-        // TODO: Navigate to appropriate screen for "No" case
+        console.log('RegisterTrainEventTrainingStatusScreen - All goals completed, navigating to summary');
+        navigation.navigate('RegisterSummaryReview');
       }
     }
   };
@@ -66,7 +164,15 @@ export const RegisterTrainEventTrainingStatusScreen: React.FC<RegisterTrainEvent
     setHasStartedTraining(started);
   };
 
-  const isNextDisabled = hasStartedTraining === null;
+  const isNextDisabled = hasStartedTraining === null || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -139,6 +245,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

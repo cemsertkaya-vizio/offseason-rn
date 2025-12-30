@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +16,8 @@ import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { ScrollPicker } from '../../../../components/ScrollPicker';
 import { colors } from '../../../../constants/colors';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { profileService } from '../../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -45,23 +49,101 @@ export const RegisterTrainEventDetailsScreen: React.FC<RegisterTrainEventDetails
   route,
 }) => {
   const { eventType } = route.params;
+  const { user } = useAuth();
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[currentDate.getMonth()]);
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedMonth = result.profile.onboarding_data.train_event_month as string;
+          const savedYear = result.profile.onboarding_data.train_event_year as number;
+          if (savedMonth) {
+            console.log('RegisterTrainEventDetailsScreen - Loading saved month:', savedMonth);
+            setSelectedMonth(savedMonth);
+          }
+          if (savedYear) {
+            console.log('RegisterTrainEventDetailsScreen - Loading saved year:', savedYear);
+            setSelectedYear(savedYear);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterTrainEventDetailsScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     console.log('RegisterTrainEventDetailsScreen - Event type:', eventType);
     console.log('RegisterTrainEventDetailsScreen - Event date:', selectedMonth, selectedYear);
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      train_event_month: selectedMonth,
+      train_event_year: selectedYear,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'train_event_date_selected',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (!saveResult.success) {
+      console.log('RegisterTrainEventDetailsScreen - Error saving date:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterTrainEventDetailsScreen - Date saved successfully');
     navigation.navigate('RegisterTrainEventTrainingStatus', {
       eventType,
       eventMonth: selectedMonth,
       eventYear: selectedYear,
     });
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -112,6 +194,7 @@ export const RegisterTrainEventDetailsScreen: React.FC<RegisterTrainEventDetails
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
+        nextDisabled={isSaving}
       />
     </View>
   );
@@ -121,6 +204,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

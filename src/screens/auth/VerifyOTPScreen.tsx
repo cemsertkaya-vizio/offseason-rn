@@ -15,6 +15,7 @@ import { BackgroundImageSection } from '../../components/BackgroundImageSection'
 import { NavigationArrows } from '../../components/NavigationArrows';
 import { authService } from '../../services/authService';
 import { profileService } from '../../services/profileService';
+import { navigationService } from '../../services/navigationService';
 import { useRegistration } from '../../contexts/RegistrationContext';
 import { colors } from '../../constants/colors';
 
@@ -93,8 +94,13 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
         );
 
         if (profileResult.success) {
-          console.log('VerifyOTPScreen - Initial profile created, continuing to physical info');
-          navigation.navigate('RegisterPhysicalInfo');
+          console.log('VerifyOTPScreen - Initial profile created, determining route');
+          const initialRoute = await navigationService.determineInitialRoute(
+            result.user,
+            profileResult.profile
+          );
+          console.log('VerifyOTPScreen - Navigating to:', initialRoute);
+          navigation.replace(initialRoute as any);
         } else {
           console.log('VerifyOTPScreen - Error creating initial profile:', profileResult.error);
           Alert.alert(
@@ -105,8 +111,13 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
           setIsVerifying(false);
         }
       } else {
-        console.log('VerifyOTPScreen - Missing registration data, continuing anyway');
-        navigation.navigate('RegisterPhysicalInfo');
+        console.log('VerifyOTPScreen - Missing registration data, fetching profile');
+        const profileStatusResult = await profileService.getOnboardingStatus(result.user.id);
+        const profile = profileStatusResult.success ? profileStatusResult.profile : null;
+        
+        const initialRoute = await navigationService.determineInitialRoute(result.user, profile);
+        console.log('VerifyOTPScreen - Navigating to:', initialRoute);
+        navigation.replace(initialRoute as any);
       }
     } else {
       console.log('VerifyOTPScreen - Error verifying OTP:', result.error);

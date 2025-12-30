@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../types/navigation';
 import { NavigationArrows } from '../../../../components/NavigationArrows';
 import { colors } from '../../../../constants/colors';
+import { useRegistration } from '../../../../contexts/RegistrationContext';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { profileService } from '../../../../services/profileService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -37,14 +42,79 @@ const FASTER_OPTIONS = [
 export const RegisterGetFasterScreen: React.FC<RegisterGetFasterScreenProps> = ({
   navigation,
 }) => {
+  const { updateRegistrationData, registrationData } = useRegistration();
+  const { user } = useAuth();
   const [selectedGoal, setSelectedGoal] = useState<FasterGoalType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedGoalType = result.profile.onboarding_data.get_faster_goal_type as FasterGoalType;
+          if (savedGoalType) {
+            console.log('RegisterGetFasterScreen - Loading saved goal type:', savedGoalType);
+            setSelectedGoal(savedGoalType);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterGetFasterScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     console.log('RegisterGetFasterScreen - Next pressed with goal:', selectedGoal);
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      get_faster_goal_type: selectedGoal,
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'get_faster_goal_type_selected',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (!saveResult.success) {
+      console.log('RegisterGetFasterScreen - Error saving goal type:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your information. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterGetFasterScreen - Goal type saved successfully');
     navigation.navigate('RegisterGetFasterDetails', { goalType: selectedGoal! });
   };
 
@@ -52,7 +122,15 @@ export const RegisterGetFasterScreen: React.FC<RegisterGetFasterScreenProps> = (
     setSelectedGoal(goalId);
   };
 
-  const isNextDisabled = selectedGoal === null;
+  const isNextDisabled = selectedGoal === null || isSaving;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -120,6 +198,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,

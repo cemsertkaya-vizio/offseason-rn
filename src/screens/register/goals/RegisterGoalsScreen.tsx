@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,18 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../types/navigation';
 import { NavigationArrows } from '../../../components/NavigationArrows';
 import { colors } from '../../../constants/colors';
+import { useRegistration } from '../../../contexts/RegistrationContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { profileService } from '../../../services/profileService';
+import { goalNavigationService } from '../../../services/goalNavigationService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const IMAGE_HEIGHT = 348;
@@ -38,27 +44,100 @@ const GOAL_OPTIONS = [
 export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
   navigation,
 }) => {
+  const { updateRegistrationData, registrationData } = useRegistration();
+  const { user } = useAuth();
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await profileService.getOnboardingStatus(user.id);
+        if (result.success && result.profile?.onboarding_data) {
+          const savedGoals = result.profile.onboarding_data.selected_goals as string[];
+          if (savedGoals && savedGoals.length > 0) {
+            console.log('RegisterGoalsScreen - Loading saved goals:', savedGoals);
+            setSelectedGoals(savedGoals);
+          }
+        }
+      } catch (error) {
+        console.log('RegisterGoalsScreen - Error loading existing data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [user]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Please log in to continue');
+      return;
+    }
+
     console.log('RegisterGoalsScreen - Next pressed with goals:', selectedGoals);
     const selectedLabels = GOAL_OPTIONS
       .filter((opt) => selectedGoals.includes(opt.id))
       .map((opt) => opt.label);
     console.log('RegisterGoalsScreen - Selected goal labels:', selectedLabels);
-    
-    if (selectedGoals.includes('get-stronger')) {
-      navigation.navigate('RegisterGetStronger');
-    } else if (selectedGoals.includes('get-faster')) {
-      navigation.navigate('RegisterGetFaster');
-    } else if (selectedGoals.includes('gain-muscle')) {
-      navigation.navigate('RegisterGainMuscle');
-    } else if (selectedGoals.includes('train-event')) {
-      navigation.navigate('RegisterTrainEvent');
+
+    setIsSaving(true);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    const existingData = result.profile?.onboarding_data || {};
+
+    const updatedData = {
+      ...existingData,
+      selected_goals: selectedGoals,
+      _completed_goals: [],
+    };
+
+    const saveResult = await profileService.updateOnboardingProgress(
+      user.id,
+      'goals_selected',
+      { onboarding_data: updatedData }
+    );
+
+    setIsSaving(false);
+
+    if (!saveResult.success) {
+      console.log('RegisterGoalsScreen - Error saving goals:', saveResult.error);
+      Alert.alert(
+        'Error',
+        'Could not save your goals. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterGoalsScreen - Goals saved successfully');
+
+    const simpleGoals = await goalNavigationService.getSimpleGoals(user.id);
+    const simpleGoalData = simpleGoals.map(goalId => ({ type: goalId }));
+
+    updateRegistrationData({ 
+      goals: [...simpleGoalData]
+    });
+
+    const { screen } = await goalNavigationService.getNextGoalScreen(user.id);
+
+    if (screen) {
+      console.log('RegisterGoalsScreen - Navigating to first goal screen:', screen);
+      navigation.navigate(screen as any);
+    } else {
+      console.log('RegisterGoalsScreen - No goals with screens, only simple goals. Navigating to summary');
+      navigation.navigate('RegisterSummaryReview');
     }
   };
 
@@ -76,10 +155,18 @@ export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
     });
   };
 
-  const isNextDisabled = selectedGoals.length !== MAX_SELECTIONS;
+  const isNextDisabled = selectedGoals.length !== MAX_SELECTIONS || isSaving;
 
   const leftColumn = GOAL_OPTIONS.filter((_, index) => index % 2 === 0);
   const rightColumn = GOAL_OPTIONS.filter((_, index) => index % 2 === 1);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -155,6 +242,13 @@ export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
         </View>
       </ScrollView>
 
+      {isSaving && (
+        <View style={styles.savingContainer}>
+          <ActivityIndicator size="small" color={colors.offWhite} />
+          <Text style={styles.savingText}>Saving...</Text>
+        </View>
+      )}
+
       <NavigationArrows
         onBackPress={handleBack}
         onNextPress={handleNext}
@@ -168,6 +262,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageContainer: {
     width: screenWidth,
@@ -243,6 +341,21 @@ const styles = StyleSheet.create({
   },
   optionTextSelected: {
     color: colors.darkBrown,
+  },
+  savingContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savingText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    marginLeft: 10,
   },
 });
 
