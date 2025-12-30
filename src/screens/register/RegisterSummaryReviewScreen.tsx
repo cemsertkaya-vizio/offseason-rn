@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,61 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   const [editMessage, setEditMessage] = useState('');
   const [selectedButton, setSelectedButton] = useState<'approve' | 'edit' | null>(null);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user) {
+        console.log('RegisterSummaryReviewScreen - No user found');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('RegisterSummaryReviewScreen - Loading profile data for user:', user.id);
+      const result = await profileService.getOnboardingStatus(user.id);
+
+      if (result.success && result.profile) {
+        const profile = result.profile;
+        console.log('RegisterSummaryReviewScreen - Profile loaded successfully');
+
+        const dataToUpdate: any = {};
+
+        if (profile.first_name) dataToUpdate.firstName = profile.first_name;
+        if (profile.last_name) dataToUpdate.lastName = profile.last_name;
+        if (profile.phone_number) dataToUpdate.phoneNumber = profile.phone_number;
+        if (profile.height_feet !== undefined && profile.height_inches !== undefined) {
+          dataToUpdate.height = { feet: profile.height_feet, inches: profile.height_inches };
+        }
+        if (profile.weight_lbs) dataToUpdate.weight = profile.weight_lbs;
+        if (profile.age) dataToUpdate.age = profile.age;
+        if (profile.gender) dataToUpdate.gender = profile.gender;
+        if (profile.location) dataToUpdate.location = profile.location;
+        if (profile.selected_activities) dataToUpdate.activities = profile.selected_activities;
+        if (profile.preferred_days) dataToUpdate.preferredDays = profile.preferred_days;
+        if (profile.training_schedule) dataToUpdate.trainingSchedule = profile.training_schedule;
+
+        if (profile.onboarding_data) {
+          const onboardingData = profile.onboarding_data;
+          if (onboardingData.selected_goals) {
+            dataToUpdate.selectedGoals = onboardingData.selected_goals;
+          }
+        }
+
+        if (registrationData.goals) {
+          dataToUpdate.goals = registrationData.goals;
+        }
+
+        console.log('RegisterSummaryReviewScreen - Updating context with profile data');
+        updateRegistrationData(dataToUpdate);
+      } else {
+        console.log('RegisterSummaryReviewScreen - Error loading profile:', result.error);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadProfileData();
+  }, [user]);
 
   const handleApprove = () => {
     setSelectedButton('approve');
@@ -56,13 +111,24 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
       return;
     }
 
-    if (!registrationData.firstName || !registrationData.phoneNumber) {
-      Alert.alert('Error', 'Registration data incomplete. Please go back and complete all steps.');
+    setIsCreatingProfile(true);
+    console.log('RegisterSummaryReviewScreen - Creating profile for user:', user.id);
+
+    const result = await profileService.getOnboardingStatus(user.id);
+    
+    if (!result.success || !result.profile) {
+      setIsCreatingProfile(false);
+      Alert.alert('Error', 'Could not load profile data. Please try again.');
       return;
     }
 
-    setIsCreatingProfile(true);
-    console.log('RegisterSummaryReviewScreen - Creating profile for user:', user.id);
+    const profile = result.profile;
+    
+    if (!profile.first_name || !profile.phone_number) {
+      setIsCreatingProfile(false);
+      Alert.alert('Error', 'Registration data incomplete. Please go back and complete all steps.');
+      return;
+    }
 
     const profileResult = await profileService.createProfile(
       user.id,
@@ -93,6 +159,14 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   };
 
   const summaryText = "Jodie Z is an ex-tennis player now training for a half-marathon in March. She loves running, hiking, yoga, and swimming.";
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -207,6 +281,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,

@@ -1,5 +1,6 @@
 import type { ProfileData, User } from '../types/auth';
 import { activityNavigationService } from './activityNavigationService';
+import { goalNavigationService } from './goalNavigationService';
 
 export type InitialRoute =
   | 'Start'
@@ -15,6 +16,10 @@ export type InitialRoute =
   | 'Other'
   | 'AnythingElse'
   | 'RegisterGoals'
+  | 'RegisterGetStronger'
+  | 'RegisterGetFaster'
+  | 'RegisterGainMuscle'
+  | 'RegisterTrainEvent'
   | 'RegisterSummaryReview'
   | 'Home';
 
@@ -86,6 +91,28 @@ export const navigationService = {
         return 'RegisterGoals';
       
       case 'goals':
+        console.log('navigationService - Goals selected, using goal navigation service');
+        const goalResult = await goalNavigationService.getNextGoalScreen(user.id);
+        if (goalResult.screen) {
+          console.log('navigationService - Resuming at goal screen:', goalResult.screen);
+          return goalResult.screen as InitialRoute;
+        }
+        console.log('navigationService - All goals complete, going to RegisterSummaryReview');
+        return 'RegisterSummaryReview';
+      
+      case 'goal_get_stronger_completed':
+      case 'goal_get_faster_completed':
+      case 'goal_gain_muscle_completed':
+      case 'goal_train_event_completed':
+        console.log('navigationService - Goal completed step detected, using goal navigation service');
+        const nextGoalResult = await goalNavigationService.getNextGoalScreen(user.id);
+        if (nextGoalResult.screen) {
+          console.log('navigationService - Next goal screen:', nextGoalResult.screen);
+          return nextGoalResult.screen as InitialRoute;
+        }
+        console.log('navigationService - All goals completed, going to RegisterSummaryReview');
+        return 'RegisterSummaryReview';
+      
       case 'summary':
         return 'RegisterSummaryReview';
       case 'complete':
@@ -125,6 +152,10 @@ export const navigationService = {
       anything_else: 78,
       anything_else_complete: 80,
       goals: 85,
+      goal_get_stronger_completed: 88,
+      goal_get_faster_completed: 88,
+      goal_gain_muscle_completed: 88,
+      goal_train_event_completed: 88,
       summary: 95,
       complete: 100,
     };

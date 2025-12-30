@@ -161,11 +161,7 @@ export const SwimmingExampleScreen: React.FC<SwimmingExampleScreenProps> = ({
         />
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={[styles.content, styles.scrollContent]}>
         <Text style={styles.title}>SWIMMING</Text>
         <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
@@ -211,7 +207,7 @@ export const SwimmingExampleScreen: React.FC<SwimmingExampleScreenProps> = ({
             width={112}
           />
         </View>
-      </ScrollView>
+      </View>
 
       <NavigationArrows
         onBackPress={handleBack}

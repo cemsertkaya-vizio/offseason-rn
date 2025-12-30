@@ -191,11 +191,7 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
         />
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={[styles.content, styles.scrollContent]}>
         <Text style={styles.title}>GET FASTER</Text>
         <Text style={styles.subtitle}>
           Let's break this down a bit more.
@@ -231,7 +227,7 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
             />
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       <NavigationArrows
         onBackPress={handleBack}

@@ -157,11 +157,7 @@ export const RegisterGainMuscleScreen: React.FC<RegisterGainMuscleScreenProps> =
         />
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={[styles.content, styles.scrollContent]}>
         <Text style={styles.title}>GAIN MUSCLE MASS</Text>
         <Text style={styles.subtitle}>
           Let's break this down a bit more.
@@ -193,7 +189,7 @@ export const RegisterGainMuscleScreen: React.FC<RegisterGainMuscleScreenProps> =
             I don't know
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
 
       <NavigationArrows
         onBackPress={handleBack}

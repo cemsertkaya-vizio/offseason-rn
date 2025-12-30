@@ -160,11 +160,7 @@ export const RegisterTrainEventDetailsScreen: React.FC<RegisterTrainEventDetails
         />
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={[styles.content, styles.scrollContent]}>
         <Text style={styles.title}>TRAIN FOR AN EVENT</Text>
         <Text style={styles.subtitle}>
           Let's break this down a bit more.
@@ -189,7 +185,7 @@ export const RegisterTrainEventDetailsScreen: React.FC<RegisterTrainEventDetails
             width={63}
           />
         </View>
-      </ScrollView>
+      </View>
 
       <NavigationArrows
         onBackPress={handleBack}
