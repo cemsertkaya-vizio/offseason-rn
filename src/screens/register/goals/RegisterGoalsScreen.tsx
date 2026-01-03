@@ -317,17 +317,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 42,
   },
   column: {
-    flex: 1,
     gap: 16,
   },
   optionButton: {
     backgroundColor: colors.offWhite,
     borderRadius: 10,
+    width: 151,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 11,
   },
   optionButtonSelected: {
     backgroundColor: colors.beige,
