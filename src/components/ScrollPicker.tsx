@@ -1,10 +1,11 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  ViewToken,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { colors } from '../constants/colors';
 
@@ -29,25 +30,44 @@ export function ScrollPicker<T>({
   width = 70,
 }: ScrollPickerProps<T>) {
   const flatListRef = useRef<FlatList>(null);
+  const isScrollReady = useRef(false);
+  const hasInitialized = useRef(false);
 
   const initialIndex = Math.max(0, options.indexOf(value));
 
-  const handleViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0) {
-        const middleItem = viewableItems[Math.floor(viewableItems.length / 2)];
-        if (middleItem && middleItem.item !== undefined) {
-          onChange(middleItem.item);
-        }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isScrollReady.current = true;
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!hasInitialized.current && flatListRef.current) {
+      hasInitialized.current = true;
+      flatListRef.current.scrollToOffset({
+        offset: initialIndex * ITEM_HEIGHT,
+        animated: false,
+      });
+    }
+  }, [initialIndex]);
+
+  const handleScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!isScrollReady.current) {
+        return;
+      }
+      
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const selectedIndex = Math.round(offsetY / ITEM_HEIGHT);
+      const clampedIndex = Math.max(0, Math.min(selectedIndex, options.length - 1));
+      
+      if (options[clampedIndex] !== value) {
+        onChange(options[clampedIndex]);
       }
     },
-    [onChange]
+    [onChange, options, value]
   );
-
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-    minimumViewTime: 100,
-  }).current;
 
   const renderItem = useCallback(
     ({ item, index }: { item: T; index: number }) => {
@@ -90,10 +110,10 @@ export function ScrollPicker<T>({
           showsVerticalScrollIndicator={false}
           snapToInterval={ITEM_HEIGHT}
           decelerationRate="fast"
-          initialScrollIndex={initialIndex}
           getItemLayout={getItemLayout}
-          onViewableItemsChanged={handleViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
+          initialScrollIndex={initialIndex}
+          onMomentumScrollEnd={handleScrollEnd}
+          onScrollEndDrag={handleScrollEnd}
           extraData={value}
           contentContainerStyle={{
             paddingVertical: ITEM_HEIGHT,
