@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     fontFamily: 'Roboto',
-    fontSize: 27,
+    fontSize: 22,
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'left',
