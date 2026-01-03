@@ -19,6 +19,7 @@ import { profileService } from '../../services/profileService';
 import { navigationService } from '../../services/navigationService';
 import { useRegistration } from '../../contexts/RegistrationContext';
 import { colors } from '../../constants/colors';
+import { formatPhoneForDisplay } from '../../utils/phoneFormatter';
 
 type VerifyOTPScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -171,7 +172,7 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
     }
   };
 
-  const maskedPhone = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+  const maskedPhone = formatPhoneForDisplay(phoneNumber);
 
   return (
     <View style={styles.container}>
