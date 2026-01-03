@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  TextInput,
   Dimensions,
   ActivityIndicator,
   Alert,
@@ -34,8 +33,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   const { registrationData, updateRegistrationData, clearRegistrationData } = useRegistration();
   const { user } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
-  const [editMessage, setEditMessage] = useState('');
-  const [selectedButton, setSelectedButton] = useState<'approve' | 'edit' | null>(null);
+  const [selectedButton, setSelectedButton] = useState<'approve' | null>(null);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -99,10 +97,6 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
     updateRegistrationData({ profileSummary: summaryText });
   };
 
-  const handleEdit = () => {
-    setSelectedButton('edit');
-  };
-
   const handleGetStarted = async () => {
     console.log('RegisterSummaryReviewScreen - Get Started pressed');
     
@@ -148,13 +142,6 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
         profileResult.error || 'Failed to create profile. Please try again.',
         [{ text: 'OK' }]
       );
-    }
-  };
-
-  const handleSendMessage = () => {
-    if (editMessage.trim()) {
-      console.log('RegisterSummaryReviewScreen - Edit message sent:', editMessage);
-      setEditMessage('');
     }
   };
 
@@ -215,14 +202,6 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
             >
               <Text style={styles.actionButtonText}>Approve</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleEdit}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionButtonText}>Edit</Text>
-            </TouchableOpacity>
           </View>
 
           {isApproved && (
@@ -252,27 +231,6 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
           )}
         </View>
       </ScrollView>
-
-      {!isApproved && (
-        <View style={styles.inputSection}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              value={editMessage}
-              onChangeText={setEditMessage}
-              placeholder="Type here..."
-              placeholderTextColor={colors.gray.muted}
-            />
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={handleSendMessage}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.sendIcon}>↑</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
     </View>
   );
 };
@@ -431,45 +389,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.darkBrown,
     textAlign: 'center',
-  },
-  inputSection: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 37,
-    paddingVertical: 20,
-    paddingBottom: 40,
-    backgroundColor: colors.darkBrown,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.offWhite,
-    borderRadius: 12,
-    height: 45,
-    paddingHorizontal: 18,
-  },
-  textInput: {
-    flex: 1,
-    fontFamily: 'Roboto',
-    fontSize: 16,
-    fontWeight: '400',
-    color: colors.darkBrown,
-    paddingVertical: 0,
-  },
-  sendButton: {
-    width: 21,
-    height: 21,
-    borderRadius: 11,
-    backgroundColor: colors.darkBrown,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendIcon: {
-    color: colors.offWhite,
-    fontSize: 14,
-    fontWeight: '700',
   },
 });
 
