@@ -31,10 +31,10 @@ interface SwimmingExampleScreenProps {
   navigation: SwimmingExampleScreenNavigationProp;
 }
 
-const SETS_OPTIONS = [7, 8, 9];
-const METERS_OPTIONS = [75, 100, 125];
-const SECONDS_OPTIONS = [85, 90, 95];
-const STROKE_OPTIONS = ['Butterfly', 'Freestyle', 'Backstroke'];
+const SETS_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20];
+const METERS_OPTIONS = [25, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500];
+const SECONDS_OPTIONS = [30, 45, 60, 75, 90, 105, 120, 135, 150, 180, 210, 240];
+const STROKE_OPTIONS = ['Freestyle', 'Backstroke', 'Breaststroke', 'Butterfly', 'Individual Medley'];
 
 export const SwimmingExampleScreen: React.FC<SwimmingExampleScreenProps> = ({
   navigation,
