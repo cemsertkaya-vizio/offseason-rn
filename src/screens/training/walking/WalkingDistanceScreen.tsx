@@ -30,7 +30,11 @@ interface WalkingDistanceScreenProps {
   navigation: WalkingDistanceScreenNavigationProp;
 }
 
-const DISTANCE_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const DISTANCE_OPTIONS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100,
+  150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000,
+];
 const UNIT_OPTIONS = ['minutes', 'meters', 'miles'];
 
 export const WalkingDistanceScreen: React.FC<WalkingDistanceScreenProps> = ({
