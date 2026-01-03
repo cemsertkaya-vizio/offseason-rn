@@ -83,6 +83,19 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
     if (result.success && result.user) {
       console.log('VerifyOTPScreen - OTP verified successfully, user ID:', result.user.id);
       
+      const existingProfileResult = await profileService.getOnboardingStatus(result.user.id);
+      
+      if (existingProfileResult.success && existingProfileResult.profile) {
+        console.log('VerifyOTPScreen - User already has a profile, navigating accordingly');
+        const initialRoute = await navigationService.determineInitialRoute(
+          result.user,
+          existingProfileResult.profile
+        );
+        console.log('VerifyOTPScreen - Navigating to:', initialRoute);
+        navigation.replace(initialRoute as any);
+        return;
+      }
+      
       if (registrationData.firstName && registrationData.lastName && registrationData.phoneNumber) {
         console.log('VerifyOTPScreen - Creating initial profile');
         const profileResult = await profileService.createInitialProfile(
@@ -112,11 +125,8 @@ export const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({
           setIsVerifying(false);
         }
       } else {
-        console.log('VerifyOTPScreen - Missing registration data, fetching profile');
-        const profileStatusResult = await profileService.getOnboardingStatus(result.user.id);
-        const profile = profileStatusResult.success ? profileStatusResult.profile : null;
-        
-        const initialRoute = await navigationService.determineInitialRoute(result.user, profile);
+        console.log('VerifyOTPScreen - Missing registration data, no profile found');
+        const initialRoute = await navigationService.determineInitialRoute(result.user, null);
         console.log('VerifyOTPScreen - Navigating to:', initialRoute);
         navigation.replace(initialRoute as any);
       }
