@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   displayText: {
     fontFamily: 'Roboto',
-    fontSize: 27,
+    fontSize: 22,
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'left',
