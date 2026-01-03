@@ -157,8 +157,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   checkbox: {
-    width: 15,
-    height: 15,
+    width: 20,
+    height: 20,
     borderWidth: 1,
     borderColor: colors.text.muted,
     borderRadius: 1,
@@ -171,9 +171,9 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: colors.darkBrown,
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: 'bold',
-    lineHeight: 10,
+    lineHeight: 14.5,
   },
   termsText: {
     fontFamily: 'Roboto',
