@@ -28,20 +28,25 @@ export const WeightInput: React.FC<WeightInputProps> = ({
 
   const hasValue = value && value.trim() !== '';
 
+  const getSuffixLeftPosition = () => {
+    const valueLength = value?.length || 0;
+    return valueLength * 13 + 4;
+  };
+
   return (
     <View style={[styles.container, { width }, style]}>
-      <View style={styles.inputContainer}>
-        <RNTextInput
-          style={styles.textInput}
-          placeholderTextColor="rgba(248, 249, 250, 0.5)"
-          value={value}
-          onChangeText={handleChangeText}
-          keyboardType="numeric"
-          {...props}
-        />
-        {hasValue && <Text style={styles.suffix}>lbs</Text>}
-      </View>
-      <View style={[styles.underline, { width }]} />
+      <RNTextInput
+        style={[styles.textInput, { width }]}
+        placeholderTextColor="rgba(248, 249, 250, 0.5)"
+        value={value}
+        onChangeText={handleChangeText}
+        keyboardType="numeric"
+        {...props}
+      />
+      {hasValue && (
+        <Text style={[styles.suffix, { left: getSuffixLeftPosition() }]}>lbs</Text>
+      )}
+      <View style={styles.underline} />
     </View>
   );
 };
@@ -53,29 +58,26 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     position: 'relative',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    width: '100%',
-    height: 65,
-    paddingBottom: 15,
-  },
   textInput: {
     fontFamily: 'Roboto',
     fontSize: 22,
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'left',
+    paddingTop: 23,
+    paddingBottom: 15,
     paddingHorizontal: 0,
-    paddingVertical: 0,
-    flex: 1,
+    width: '100%',
+    height: 65,
+    letterSpacing: 0,
   },
   suffix: {
     fontFamily: 'Roboto',
     fontSize: 22,
     fontWeight: '400',
     color: colors.offWhite,
-    marginLeft: 8,
+    position: 'absolute',
+    top: 23,
   },
   underline: {
     height: 1,
