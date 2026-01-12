@@ -22,7 +22,8 @@ export type InitialRoute =
   | 'RegisterGainMuscle'
   | 'RegisterTrainEvent'
   | 'RegisterSummaryReview'
-  | 'Home';
+  | 'Home'
+  | 'MainTabs';
 
 export const navigationService = {
   determineInitialRoute: async (user: User | null, profile: ProfileData | null | undefined): Promise<InitialRoute> => {
@@ -43,8 +44,8 @@ export const navigationService = {
     }
 
     if (profile.registration_completed_at) {
-      console.log('navigationService - Profile complete, going to Home');
-      return 'Home';
+      console.log('navigationService - Profile complete, going to MainTabs');
+      return 'MainTabs';
     }
 
     console.log('navigationService - Profile incomplete, resuming at:', profile.onboarding_step);
@@ -122,7 +123,7 @@ export const navigationService = {
       case 'summary':
         return 'RegisterSummaryReview';
       case 'complete':
-        return 'Home';
+        return 'MainTabs';
       default:
         console.log('navigationService - Unknown step, defaulting to RegisterPhysicalInfo');
         return 'RegisterPhysicalInfo';

@@ -4,6 +4,7 @@ import { AppLoadingScreen, HomeScreen, StartScreen, RegisterScreen, CoreProfileS
 import { WeightliftingScreen, WeightliftingEquipmentScreen, WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, YogaScreen, YogaStudioScreen, RunningScreen, RunningStyleScreen, RunningExampleScreen, RunningDistanceScreen, SportsScreen, SportsTypeScreen, WalkingScreen, WalkingDistanceScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
 import { LoginScreen, VerifyOTPScreen } from '../screens/auth';
 import { RootStackParamList } from '../types/navigation';
+import { TabNavigator } from './TabNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -17,6 +18,7 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="AppLoading" component={AppLoadingScreen} />
       <Stack.Screen name="Start" component={StartScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />

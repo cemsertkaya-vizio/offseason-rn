@@ -4,6 +4,7 @@ export const colors = {
   offWhite: '#F8F9FA',
   darkBrown: '#251B19',
   beige: '#ECD7C5',
+  yellow: '#FFCC33',
   gray: {
     light: '#F5F5F5',
     medium: '#D1D1D1',
@@ -17,5 +18,10 @@ export const colors = {
     muted: '#8E8A89',
   },
   background: '#8B8B8B',
+  tabBar: {
+    background: '#251B19',
+    inactive: '#F8F9FA',
+    active: '#FFFFFF',
+  },
 };
 

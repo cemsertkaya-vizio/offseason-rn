@@ -10,4 +10,6 @@ export * from './WeightPicker';
 export * from './AgeInput';
 export * from './GenderPicker';
 export * from './PhoneInput';
+export * from './WorkoutCard';
+export * from './TimelineIndicator';
 

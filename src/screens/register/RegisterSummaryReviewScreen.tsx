@@ -134,7 +134,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
     if (profileResult.success) {
       console.log('RegisterSummaryReviewScreen - Profile created successfully, registration complete');
       clearRegistrationData();
-      navigation.replace('Home');
+      navigation.replace('MainTabs');
     } else {
       console.log('RegisterSummaryReviewScreen - Error creating profile:', profileResult.error);
       Alert.alert(

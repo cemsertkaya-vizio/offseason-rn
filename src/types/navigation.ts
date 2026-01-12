@@ -1,3 +1,11 @@
+export type MainTabParamList = {
+  Workouts: undefined;
+  Goals: undefined;
+  Center: undefined;
+  Analytics: undefined;
+  Profile: undefined;
+};
+
 export type RootStackParamList = {
   AppLoading: undefined;
   Start: undefined;
@@ -5,6 +13,7 @@ export type RootStackParamList = {
   VerifyOTP: { phoneNumber: string; countryCode: string; callingCode: string; isRegistering: boolean };
   Register: undefined;
   Home: undefined;
+  MainTabs: undefined;
   CoreProfile: undefined;
   RegisterCoreProfile: undefined;
   RegisterPhysicalInfo: undefined;
