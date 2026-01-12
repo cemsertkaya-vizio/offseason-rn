@@ -115,23 +115,29 @@ export const WorkoutsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {mockWorkouts.map((workout, index) => (
-          <View key={workout.id} style={styles.workoutRow}>
-            <TimelineIndicator
-              isCompleted={workout.isCompleted}
-              isFirst={index === 0}
-              isLast={index === mockWorkouts.length - 1}
-            />
-            <View style={styles.cardWrapper}>
-              <WorkoutCard
-                day={workout.day}
-                title={workout.title}
-                imageSource={workout.imageSource}
-                onPress={() => handleWorkoutPress(workout.id)}
+        {mockWorkouts.map((workout, index) => {
+          const nextWorkout = mockWorkouts[index + 1];
+          const isNextCompleted = nextWorkout?.isCompleted ?? false;
+          
+          return (
+            <View key={workout.id} style={styles.workoutRow}>
+              <TimelineIndicator
+                isCompleted={workout.isCompleted}
+                isFirst={index === 0}
+                isLast={index === mockWorkouts.length - 1}
+                isNextCompleted={isNextCompleted}
               />
+              <View style={styles.cardWrapper}>
+                <WorkoutCard
+                  day={workout.day}
+                  title={workout.title}
+                  imageSource={workout.imageSource}
+                  onPress={() => handleWorkoutPress(workout.id)}
+                />
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
         <View style={styles.expandIndicator}>
           <Icon name="keyboard-arrow-down" size={24} color={colors.offWhite} />
         </View>
