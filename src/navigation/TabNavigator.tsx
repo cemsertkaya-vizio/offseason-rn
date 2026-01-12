@@ -1,8 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '../constants/colors';
 import {
   WorkoutsScreen,
@@ -12,9 +10,14 @@ import {
 } from '../screens/main';
 import { MainTabParamList } from '../types/navigation';
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const tabBarIcons = {
+  workouts: require('../assets/tabbar/run.png'),
+  goals: require('../assets/tabbar/trophy-outline.png'),
+  analytics: require('../assets/tabbar/chart-bar.png'),
+  profile: require('../assets/tabbar/person-outline.png'),
+};
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const CenterTabIcon: React.FC<{ focused: boolean }> = ({ focused }) => {
   return (
@@ -39,8 +42,12 @@ export const TabNavigator: React.FC = () => {
         name="Workouts"
         component={WorkoutsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="run" size={33} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={tabBarIcons.workouts}
+              style={[styles.tabIcon, focused && styles.tabIconActive]}
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -48,8 +55,12 @@ export const TabNavigator: React.FC = () => {
         name="Goals"
         component={GoalsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="trophy-outline" size={31} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={tabBarIcons.goals}
+              style={[styles.goalsIcon, focused && styles.tabIconActive]}
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -70,8 +81,12 @@ export const TabNavigator: React.FC = () => {
         name="Analytics"
         component={AnalyticsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="chart-bar" size={30} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={tabBarIcons.analytics}
+              style={[styles.analyticsIcon, focused && styles.tabIconActive]}
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -79,8 +94,12 @@ export const TabNavigator: React.FC = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon2 name="person-outline" size={30} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={tabBarIcons.profile}
+              style={[styles.profileIcon, focused && styles.tabIconActive]}
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -97,6 +116,25 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
     paddingHorizontal: 20,
+  },
+  tabIcon: {
+    width: 33,
+    height: 33,
+  },
+  goalsIcon: {
+    width: 31,
+    height: 31,
+  },
+  profileIcon: {
+    width: 26,
+    height: 26,
+  },
+  analyticsIcon: {
+    width: 36,
+    height: 30,
+  },
+  tabIconActive: {
+    tintColor: colors.white,
   },
   centerIconContainer: {
     alignItems: 'center',
