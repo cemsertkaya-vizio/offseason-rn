@@ -13,6 +13,7 @@ import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../constants/colors';
 import { WorkoutCard } from '../../components/WorkoutCard';
 import { TimelineIndicator } from '../../components/TimelineIndicator';
+import { useProfile } from '../../contexts/ProfileContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -78,7 +79,8 @@ const mockWorkouts: WorkoutItem[] = [
 
 export const WorkoutsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const userName = 'Jodie';
+  const { profile } = useProfile();
+  const userName = profile?.first_name || '';
   const weekRange = 'Aug 18 - 24';
 
   const handleWorkoutPress = (workoutId: string) => {

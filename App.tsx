@@ -11,18 +11,21 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { ProfileProvider } from './src/contexts/ProfileContext';
 import { RegistrationProvider } from './src/contexts/RegistrationContext';
 
 function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RegistrationProvider>
-          <NavigationContainer>
-            <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
-            <RootNavigator />
-          </NavigationContainer>
-        </RegistrationProvider>
+        <ProfileProvider>
+          <RegistrationProvider>
+            <NavigationContainer>
+              <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
+              <RootNavigator />
+            </NavigationContainer>
+          </RegistrationProvider>
+        </ProfileProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
