@@ -1,12 +1,10 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  NativeModules,
   TouchableOpacity,
   FlatList,
-  Platform,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -20,7 +18,56 @@ import { colors } from '../../constants/colors';
 import { useAuth } from '../../contexts/AuthContext';
 import { profileService } from '../../services/profileService';
 
-const { MapKitSearchCompleter } = NativeModules;
+const SF_NEIGHBORHOODS = [
+  'Alamo Square',
+  'Bayview',
+  'Bernal Heights',
+  'Castro',
+  'Chinatown',
+  'Civic Center',
+  'Cole Valley',
+  'Cow Hollow',
+  'Dogpatch',
+  'Excelsior',
+  'Financial District',
+  'Fisherman\'s Wharf',
+  'Glen Park',
+  'Haight-Ashbury',
+  'Hayes Valley',
+  'Inner Richmond',
+  'Inner Sunset',
+  'Jackson Square',
+  'Japantown',
+  'Laurel Heights',
+  'Lower Haight',
+  'Lower Pacific Heights',
+  'Marina',
+  'Mission',
+  'Mission Bay',
+  'Nob Hill',
+  'Noe Valley',
+  'North Beach',
+  'Outer Richmond',
+  'Outer Sunset',
+  'Pacific Heights',
+  'Parkside',
+  'Portola',
+  'Potrero Hill',
+  'Presidio',
+  'Presidio Heights',
+  'Russian Hill',
+  'Sea Cliff',
+  'SoMa',
+  'South Beach',
+  'Sunset',
+  'Telegraph Hill',
+  'Tenderloin',
+  'Twin Peaks',
+  'Union Square',
+  'Visitacion Valley',
+  'West Portal',
+  'Western Addition',
+];
 
 type RegisterLocationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -31,58 +78,31 @@ interface RegisterLocationScreenProps {
   navigation: RegisterLocationScreenNavigationProp;
 }
 
-interface LocationSuggestion {
-  id: string;
-  title: string;
-  subtitle: string;
-  fullText: string;
-}
-
 export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
   navigation,
 }) => {
   const { user } = useAuth();
   const [location, setLocation] = useState('');
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [searchText, setSearchText] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const searchLocation = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
+  const filteredNeighborhoods = useMemo(() => {
+    if (!searchText.trim()) {
+      return SF_NEIGHBORHOODS;
     }
-
-    if (Platform.OS !== 'ios') {
-      console.log('RegisterLocationScreen - MapKit search only available on iOS');
-      return;
-    }
-
-    try {
-      const results = await MapKitSearchCompleter.search(query);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-    } catch (error) {
-      console.log('RegisterLocationScreen - Search error:', error);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, []);
+    const query = searchText.toLowerCase();
+    return SF_NEIGHBORHOODS.filter(neighborhood =>
+      neighborhood.toLowerCase().includes(query)
+    );
+  }, [searchText]);
 
   const handleTextChange = useCallback((text: string) => {
+    setSearchText(text);
     setLocation(text);
-    
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    debounceTimeout.current = setTimeout(() => {
-      searchLocation(text);
-    }, 300);
-  }, [searchLocation]);
+    setShowSuggestions(true);
+  }, []);
 
   useEffect(() => {
     const loadSavedData = async () => {
@@ -97,23 +117,18 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
       if (result.success && result.profile && result.profile.location) {
         console.log('RegisterLocationScreen - Pre-filling with saved location');
         setLocation(result.profile.location);
+        setSearchText(result.profile.location);
       }
 
       setIsLoading(false);
     };
 
     loadSavedData();
-
-    return () => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
   }, [user]);
 
-  const handleSuggestionSelect = useCallback((suggestion: LocationSuggestion) => {
-    setLocation(suggestion.fullText);
-    setSuggestions([]);
+  const handleNeighborhoodSelect = useCallback((neighborhood: string) => {
+    setLocation(neighborhood);
+    setSearchText(neighborhood);
     setShowSuggestions(false);
   }, []);
 
@@ -153,16 +168,14 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
 
   const isNextDisabled = !location.trim() || isSaving;
 
-  const renderSuggestionItem = ({ item }: { item: LocationSuggestion }) => (
+  const renderNeighborhoodItem = ({ item }: { item: string }) => (
     <TouchableOpacity
       style={styles.suggestionItem}
-      onPress={() => handleSuggestionSelect(item)}
+      onPress={() => handleNeighborhoodSelect(item)}
       activeOpacity={0.7}
     >
-      <Text style={styles.suggestionTitle}>{item.title}</Text>
-      {item.subtitle ? (
-        <Text style={styles.suggestionSubtitle}>{item.subtitle}</Text>
-      ) : null}
+      <Text style={styles.suggestionTitle}>{item}</Text>
+      <Text style={styles.suggestionSubtitle}>San Francisco, CA</Text>
     </TouchableOpacity>
   );
 
@@ -194,17 +207,17 @@ export const RegisterLocationScreen: React.FC<RegisterLocationScreenProps> = ({
         <View style={styles.inputsWrapper}>
           <UnderlineTextField
             placeholder="Neighborhood, City, State"
-            value={location}
+            value={searchText}
             onChangeText={handleTextChange}
             style={styles.textField}
           />
 
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && filteredNeighborhoods.length > 0 && (
             <View style={styles.suggestionsContainer}>
               <FlatList
-                data={suggestions}
-                renderItem={renderSuggestionItem}
-                keyExtractor={(item) => item.id}
+                data={filteredNeighborhoods}
+                renderItem={renderNeighborhoodItem}
+                keyExtractor={(item) => item}
                 keyboardShouldPersistTaps="handled"
                 scrollEnabled={true}
                 nestedScrollEnabled={true}
