@@ -112,15 +112,10 @@ export const RegisterPreferencesScreen: React.FC<RegisterPreferencesScreenProps>
     }
   };
 
-  const MAX_SELECTIONS = 4;
-
   const toggleActivity = (activityId: string) => {
     setSelectedActivities((prev) => {
       if (prev.includes(activityId)) {
         return prev.filter((id) => id !== activityId);
-      }
-      if (prev.length >= MAX_SELECTIONS) {
-        return prev;
       }
       return [...prev, activityId];
     });
