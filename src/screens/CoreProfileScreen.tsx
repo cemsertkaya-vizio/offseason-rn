@@ -6,6 +6,7 @@ import {
   ImageBackground,
   TouchableOpacity,
   Image,
+  Linking,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
@@ -32,6 +33,7 @@ export const CoreProfileScreen: React.FC<CoreProfileScreenProps> = ({ navigation
 
   const handleTermsPress = () => {
     console.log('CoreProfileScreen - Terms & Conditions pressed');
+    Linking.openURL('https://www.offseasonfitness.com/terms');
   };
 
   return (
