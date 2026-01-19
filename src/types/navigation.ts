@@ -56,5 +56,6 @@ export type RootStackParamList = {
   WalkingDistance: undefined;
   Other: undefined;
   AnythingElse: undefined;
+  ReferFriends: undefined;
 };
 

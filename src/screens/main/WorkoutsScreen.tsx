@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../constants/colors';
@@ -15,6 +17,7 @@ import { TimelineIndicator } from '../../components/TimelineIndicator';
 import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
 import { getCurrentWeekRange } from '../../utils/dateUtils';
+import { RootStackParamList } from '../../types/navigation';
 
 interface WorkoutItem {
   id: string;
@@ -76,8 +79,11 @@ const mockWorkouts: WorkoutItem[] = [
   },
 ];
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export const WorkoutsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NavigationProp>();
   const { profile } = useProfile();
   const userName = profile?.first_name || '';
   const weekRange = getCurrentWeekRange();
@@ -89,6 +95,7 @@ export const WorkoutsScreen: React.FC = () => {
 
   const handleReferFriendsPress = () => {
     console.log('WorkoutsScreen - Refer friends pressed');
+    navigation.navigate('ReferFriends');
   };
 
   return (
