@@ -19,63 +19,100 @@ import { useProfile } from '../../contexts/ProfileContext';
 import { getCurrentWeekRange } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../types/navigation';
 
-interface WorkoutItem {
+interface SingleWorkout {
   id: string;
-  day: string;
   title: string;
-  isCompleted: boolean;
   imageSource: number;
 }
 
-const mockWorkouts: WorkoutItem[] = [
+interface DayWorkout {
+  day: string;
+  isCompleted: boolean;
+  workouts: SingleWorkout[];
+}
+
+const mockWorkouts: DayWorkout[] = [
   {
-    id: '1',
     day: 'Monday',
-    title: 'Lower Body',
     isCompleted: true,
-    imageSource: require('../../assets/workouts/workout-lower-body.png'),
+    workouts: [
+      {
+        id: '1a',
+        title: 'Lower Body',
+        imageSource: require('../../assets/workouts/workout-lower-body.png'),
+      },
+      {
+        id: '1b',
+        title: 'Run',
+        imageSource: require('../../assets/workouts/workout-outdoor-run.png'),
+      },
+    ],
   },
   {
-    id: '2',
     day: 'Tuesday',
-    title: 'Swim',
     isCompleted: true,
-    imageSource: require('../../assets/workouts/workout-swim.png'),
+    workouts: [
+      {
+        id: '2',
+        title: 'Swim',
+        imageSource: require('../../assets/workouts/workout-swim.png'),
+      },
+    ],
   },
   {
-    id: '3',
     day: 'Wednesday',
-    title: 'Hot Yoga',
     isCompleted: true,
-    imageSource: require('../../assets/workouts/workout-hot-yoga.png'),
+    workouts: [
+      {
+        id: '3',
+        title: 'Hot Yoga',
+        imageSource: require('../../assets/workouts/workout-hot-yoga.png'),
+      },
+    ],
   },
   {
-    id: '4',
     day: 'Thursday',
-    title: 'Contrast Therapy',
     isCompleted: false,
-    imageSource: require('../../assets/workouts/workout-contrast-therapy.png'),
+    workouts: [
+      {
+        id: '4',
+        title: 'Contrast Therapy',
+        imageSource: require('../../assets/workouts/workout-contrast-therapy.png'),
+      },
+    ],
   },
   {
-    id: '5',
     day: 'Friday',
-    title: 'Outdoor Run',
     isCompleted: false,
-    imageSource: require('../../assets/workouts/workout-outdoor-run.png'),
+    workouts: [
+      {
+        id: '5',
+        title: 'Outdoor Run',
+        imageSource: require('../../assets/workouts/workout-outdoor-run.png'),
+      },
+    ],
   },
   {
-    id: '6',
     day: 'Saturday',
-    title: 'Studio Pilates',
     isCompleted: false,
-    imageSource: require('../../assets/workouts/workout-studio-pilates.png'),
+    workouts: [
+      {
+        id: '6',
+        title: 'Studio Pilates',
+        imageSource: require('../../assets/workouts/workout-studio-pilates.png'),
+      },
+    ],
   },
   {
-    id: '7',
     day: 'Sunday',
-    title: 'Rest Day',
     isCompleted: false,
-    imageSource: require('../../assets/workouts/workout-rest-day.png'),
+    workouts: [
+      {
+        id: '7',
+        title: 'Rest Day',
+        imageSource: require('../../assets/workouts/workout-rest-day.png'),
+      },
+    ],
   },
 ];
 
@@ -124,26 +161,54 @@ export const WorkoutsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {mockWorkouts.map((workout, index) => {
+        {mockWorkouts.map((dayWorkout, index) => {
           const nextWorkout = mockWorkouts[index + 1];
           const isNextCompleted = nextWorkout?.isCompleted ?? false;
+          const hasDualWorkouts = dayWorkout.workouts.length === 2;
           
           return (
-            <View key={workout.id} style={styles.workoutRow}>
+            <View key={dayWorkout.day} style={styles.workoutRow}>
               <TimelineIndicator
-                isCompleted={workout.isCompleted}
+                isCompleted={dayWorkout.isCompleted}
                 isFirst={index === 0}
                 isLast={index === mockWorkouts.length - 1}
                 isNextCompleted={isNextCompleted}
               />
-              <View style={styles.cardWrapper}>
-                <WorkoutCard
-                  day={workout.day}
-                  title={workout.title}
-                  imageSource={workout.imageSource}
-                  onPress={() => handleWorkoutPress(workout.id)}
-                />
-              </View>
+              {hasDualWorkouts ? (
+                <View style={styles.dualCardWrapper}>
+                  <View style={styles.leftCardWrapper}>
+                    <WorkoutCard
+                      day={dayWorkout.day}
+                      title={dayWorkout.workouts[0].title}
+                      imageSource={dayWorkout.workouts[0].imageSource}
+                      onPress={() => handleWorkoutPress(dayWorkout.workouts[0].id)}
+                      position="left"
+                      showDay={true}
+                      showArrow={false}
+                    />
+                  </View>
+                  <View style={styles.rightCardWrapper}>
+                    <WorkoutCard
+                      day={dayWorkout.day}
+                      title={dayWorkout.workouts[1].title}
+                      imageSource={dayWorkout.workouts[1].imageSource}
+                      onPress={() => handleWorkoutPress(dayWorkout.workouts[1].id)}
+                      position="right"
+                      showDay={false}
+                      showArrow={true}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.cardWrapper}>
+                  <WorkoutCard
+                    day={dayWorkout.day}
+                    title={dayWorkout.workouts[0].title}
+                    imageSource={dayWorkout.workouts[0].imageSource}
+                    onPress={() => handleWorkoutPress(dayWorkout.workouts[0].id)}
+                  />
+                </View>
+              )}
             </View>
           );
         })}
@@ -217,6 +282,19 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     flex: 1,
+    height: 76,
+  },
+  dualCardWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    height: 76,
+  },
+  leftCardWrapper: {
+    flex: 1,
+    height: 76,
+  },
+  rightCardWrapper: {
+    flex: 1.1,
     height: 76,
   },
   expandIndicator: {
