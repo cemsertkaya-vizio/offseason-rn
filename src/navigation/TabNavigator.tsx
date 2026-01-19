@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../constants/colors';
 import {
   WorkoutsScreen,
@@ -8,7 +10,9 @@ import {
   AnalyticsScreen,
   ProfileScreen,
 } from '../screens/main';
-import { MainTabParamList } from '../types/navigation';
+import { MainTabParamList, RootStackParamList } from '../types/navigation';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const tabBarIcons = {
   workouts: require('../assets/tabbar/run.png'),
@@ -28,6 +32,13 @@ const CenterTabIcon: React.FC<{ focused: boolean }> = ({ focused }) => {
 };
 
 export const TabNavigator: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+
+  const handleCenterPress = () => {
+    console.log('TabNavigator - Center button pressed, opening AI Chat');
+    navigation.navigate('AiChat');
+  };
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -73,7 +84,7 @@ export const TabNavigator: React.FC = () => {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            console.log('TabNavigator - Center button pressed');
+            handleCenterPress();
           },
         }}
       />

@@ -57,5 +57,6 @@ export type RootStackParamList = {
   Other: undefined;
   AnythingElse: undefined;
   ReferFriends: undefined;
+  AiChat: undefined;
 };
 
