@@ -58,5 +58,12 @@ export type RootStackParamList = {
   AnythingElse: undefined;
   ReferFriends: undefined;
   AiChat: undefined;
+  WorkoutDetail: {
+    workoutId: string;
+    workoutTitle: string;
+    day: string;
+    date?: string;
+    duration?: number;
+  };
 };
 

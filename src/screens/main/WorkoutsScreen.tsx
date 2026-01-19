@@ -126,8 +126,14 @@ export const WorkoutsScreen: React.FC = () => {
   const weekRange = getCurrentWeekRange();
   const goals = profile?.goals || [];
 
-  const handleWorkoutPress = (workoutId: string) => {
-    console.log('WorkoutsScreen - Workout pressed:', workoutId);
+  const handleWorkoutPress = (workout: SingleWorkout, dayWorkout: DayWorkout) => {
+    console.log('WorkoutsScreen - Workout pressed:', workout.id);
+    navigation.navigate('WorkoutDetail', {
+      workoutId: workout.id,
+      workoutTitle: workout.title,
+      day: dayWorkout.day,
+      duration: 40,
+    });
   };
 
   const handleReferFriendsPress = () => {
@@ -181,7 +187,7 @@ export const WorkoutsScreen: React.FC = () => {
                       day={dayWorkout.day}
                       title={dayWorkout.workouts[0].title}
                       imageSource={dayWorkout.workouts[0].imageSource}
-                      onPress={() => handleWorkoutPress(dayWorkout.workouts[0].id)}
+                      onPress={() => handleWorkoutPress(dayWorkout.workouts[0], dayWorkout)}
                       position="left"
                       showDay={true}
                       showArrow={false}
@@ -192,7 +198,7 @@ export const WorkoutsScreen: React.FC = () => {
                       day={dayWorkout.day}
                       title={dayWorkout.workouts[1].title}
                       imageSource={dayWorkout.workouts[1].imageSource}
-                      onPress={() => handleWorkoutPress(dayWorkout.workouts[1].id)}
+                      onPress={() => handleWorkoutPress(dayWorkout.workouts[1], dayWorkout)}
                       position="right"
                       showDay={false}
                       showArrow={true}
@@ -205,7 +211,7 @@ export const WorkoutsScreen: React.FC = () => {
                     day={dayWorkout.day}
                     title={dayWorkout.workouts[0].title}
                     imageSource={dayWorkout.workouts[0].imageSource}
-                    onPress={() => handleWorkoutPress(dayWorkout.workouts[0].id)}
+                    onPress={() => handleWorkoutPress(dayWorkout.workouts[0], dayWorkout)}
                   />
                 </View>
               )}
