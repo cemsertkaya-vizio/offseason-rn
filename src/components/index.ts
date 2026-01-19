@@ -12,4 +12,5 @@ export * from './GenderPicker';
 export * from './PhoneInput';
 export * from './WorkoutCard';
 export * from './TimelineIndicator';
+export * from './GoalsDisplay';
 

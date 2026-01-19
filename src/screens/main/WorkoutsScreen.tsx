@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -13,9 +12,9 @@ import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../constants/colors';
 import { WorkoutCard } from '../../components/WorkoutCard';
 import { TimelineIndicator } from '../../components/TimelineIndicator';
+import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { getCurrentWeekRange } from '../../utils/dateUtils';
 
 interface WorkoutItem {
   id: string;
@@ -81,7 +80,8 @@ export const WorkoutsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
   const userName = profile?.first_name || '';
-  const weekRange = 'Aug 18 - 24';
+  const weekRange = getCurrentWeekRange();
+  const goals = profile?.goals || [];
 
   const handleWorkoutPress = (workoutId: string) => {
     console.log('WorkoutsScreen - Workout pressed:', workoutId);
@@ -109,6 +109,8 @@ export const WorkoutsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      <GoalsDisplay goals={goals} />
 
       <ScrollView
         style={styles.scrollView}
@@ -152,20 +154,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.darkBrown,
   },
   header: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 34,
     paddingTop: 24,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   welcomeText: {
     fontFamily: 'Bebas Neue',
     fontSize: 32,
     color: colors.offWhite,
     lineHeight: 51,
+    textTransform: 'uppercase',
   },
   subHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 0,
   },
   weekContainer: {
     flexDirection: 'row',
@@ -177,6 +180,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.offWhite,
     lineHeight: 26,
+    textTransform: 'uppercase',
   },
   referContainer: {
     flexDirection: 'row',
@@ -189,9 +193,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.yellow,
     lineHeight: 26,
+    textTransform: 'uppercase',
   },
   scrollView: {
     flex: 1,
+    marginTop: 12,
   },
   scrollContent: {
     paddingLeft: 27,
