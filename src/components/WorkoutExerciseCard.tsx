@@ -88,16 +88,18 @@ export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     backgroundColor: '#1A1A1A',
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
     borderColor: colors.offWhite,
-    height: 92,
+    minHeight: 92,
+    maxHeight: 120,
   },
   imageContainer: {
     width: 147,
-    height: 92,
+    minHeight: 92,
+    maxHeight: 120,
     position: 'relative',
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
@@ -123,6 +125,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 14,
     paddingRight: 8,
+    paddingVertical: 12,
     justifyContent: 'center',
   },
   title: {
@@ -153,6 +156,8 @@ const styles = StyleSheet.create({
   checkContainer: {
     paddingRight: 14,
     paddingLeft: 8,
+    alignSelf: 'flex-start',
+    paddingTop: 10,
   },
   checkCircle: {
     width: 16,
