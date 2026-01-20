@@ -64,9 +64,14 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
         style={getImageStyle()}
         resizeMode="cover"
       />
-      <View style={styles.contentContainer}>
+      <View style={[styles.contentContainer, showArrow && styles.contentWithArrow]}>
         {showDay && <Text style={styles.dayText}>{day.toUpperCase()}</Text>}
-        <Text style={[styles.titleText, !showDay && styles.titleTextNoDay]}>
+        <Text
+          style={[styles.titleText, !showDay && styles.titleTextNoDay]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
           {title.toUpperCase()}
         </Text>
       </View>
@@ -150,6 +155,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 9,
     left: 14,
+    right: 14,
+  },
+  contentWithArrow: {
+    right: 40,
   },
   dayText: {
     fontFamily: 'Bebas Neue',

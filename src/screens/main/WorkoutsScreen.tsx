@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,103 +19,105 @@ import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
 import { getCurrentWeekRange } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../types/navigation';
+import { workoutService } from '../../services/workoutService';
+import type { Season, DayWorkout, WorkoutExercise } from '../../types/workout';
 
-interface SingleWorkout {
+interface DisplayWorkout {
   id: string;
   title: string;
   imageSource: number;
+  exercises: WorkoutExercise[];
+  goal?: string;
 }
 
-interface DayWorkout {
+interface DisplayDayWorkout {
   day: string;
   isCompleted: boolean;
-  workouts: SingleWorkout[];
+  workouts: DisplayWorkout[];
+  isRestDay: boolean;
 }
 
-const mockWorkouts: DayWorkout[] = [
-  {
-    day: 'Monday',
-    isCompleted: true,
-    workouts: [
-      {
-        id: '1a',
-        title: 'Lower Body',
-        imageSource: require('../../assets/workouts/workout-lower-body.png'),
-      },
-      {
-        id: '1b',
-        title: 'Run',
-        imageSource: require('../../assets/workouts/workout-outdoor-run.png'),
-      },
-    ],
-  },
-  {
-    day: 'Tuesday',
-    isCompleted: true,
-    workouts: [
-      {
-        id: '2',
-        title: 'Swim',
-        imageSource: require('../../assets/workouts/workout-swim.png'),
-      },
-    ],
-  },
-  {
-    day: 'Wednesday',
-    isCompleted: true,
-    workouts: [
-      {
-        id: '3',
-        title: 'Hot Yoga',
-        imageSource: require('../../assets/workouts/workout-hot-yoga.png'),
-      },
-    ],
-  },
-  {
-    day: 'Thursday',
-    isCompleted: false,
-    workouts: [
-      {
-        id: '4',
-        title: 'Contrast Therapy',
-        imageSource: require('../../assets/workouts/workout-contrast-therapy.png'),
-      },
-    ],
-  },
-  {
-    day: 'Friday',
-    isCompleted: false,
-    workouts: [
-      {
-        id: '5',
-        title: 'Outdoor Run',
-        imageSource: require('../../assets/workouts/workout-outdoor-run.png'),
-      },
-    ],
-  },
-  {
-    day: 'Saturday',
-    isCompleted: false,
-    workouts: [
-      {
-        id: '6',
-        title: 'Studio Pilates',
-        imageSource: require('../../assets/workouts/workout-studio-pilates.png'),
-      },
-    ],
-  },
-  {
-    day: 'Sunday',
-    isCompleted: false,
-    workouts: [
-      {
-        id: '7',
-        title: 'Rest Day',
-        imageSource: require('../../assets/workouts/workout-rest-day.png'),
-      },
-    ],
-  },
-];
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const getWorkoutImage = (workoutName: string): number => {
+  const name = workoutName.toLowerCase();
+  
+  if (name.includes('lower') || name.includes('squat') || name.includes('deadlift') || name.includes('leg')) {
+    return require('../../assets/workouts/workout-lower-body.png');
+  }
+  if (name.includes('run')) {
+    return require('../../assets/workouts/workout-outdoor-run.png');
+  }
+  if (name.includes('swim')) {
+    return require('../../assets/workouts/workout-swim.png');
+  }
+  if (name.includes('yoga')) {
+    return require('../../assets/workouts/workout-hot-yoga.png');
+  }
+  if (name.includes('pilates')) {
+    return require('../../assets/workouts/workout-studio-pilates.png');
+  }
+  if (name.includes('rest') || name.includes('recovery')) {
+    return require('../../assets/workouts/workout-rest-day.png');
+  }
+  if (name.includes('upper') || name.includes('push') || name.includes('pull') || name.includes('press')) {
+    return require('../../assets/workouts/workout-contrast-therapy.png');
+  }
+  if (name.includes('core') || name.includes('stability')) {
+    return require('../../assets/workouts/workout-hot-yoga.png');
+  }
+  if (name.includes('full body')) {
+    return require('../../assets/workouts/workout-lower-body.png');
+  }
+  
+  return require('../../assets/workouts/workout-outdoor-run.png');
+};
+
+const transformSeasonToDisplayWorkouts = (season: Season): DisplayDayWorkout[] => {
+  if (!season.cycles || season.cycles.length === 0) {
+    return [];
+  }
+
+  const firstCycle = season.cycles[0];
+  if (!firstCycle.weeks || firstCycle.weeks.length === 0) {
+    return [];
+  }
+
+  const firstWeek = firstCycle.weeks[0];
+  const days = firstWeek.days;
+
+  return DAY_ORDER.map((dayName, index) => {
+    const dayData: DayWorkout | undefined = days[dayName];
+
+    if (!dayData || dayData.rest_day) {
+      return {
+        day: dayName,
+        isCompleted: false,
+        isRestDay: true,
+        workouts: [{
+          id: `${dayName}-rest`,
+          title: 'Rest Day',
+          imageSource: require('../../assets/workouts/workout-rest-day.png'),
+          exercises: [],
+          goal: 'Recovery and rest',
+        }],
+      };
+    }
+
+    return {
+      day: dayName,
+      isCompleted: false,
+      isRestDay: false,
+      workouts: [{
+        id: `${dayName}-${index}`,
+        title: dayData.name || 'Workout',
+        imageSource: getWorkoutImage(dayData.name || ''),
+        exercises: dayData.exercises || [],
+        goal: dayData.goal,
+      }],
+    };
+  });
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -126,13 +129,60 @@ export const WorkoutsScreen: React.FC = () => {
   const weekRange = getCurrentWeekRange();
   const goals = profile?.goals || [];
 
-  const handleWorkoutPress = (workout: SingleWorkout, dayWorkout: DayWorkout) => {
+  const [workouts, setWorkouts] = useState<DisplayDayWorkout[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchWorkouts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('WorkoutsScreen - Fetching workout season');
+      const result = await workoutService.loadExistingSeason();
+
+      if (result.success && result.season) {
+        console.log('WorkoutsScreen - Season loaded successfully');
+        const displayWorkouts = transformSeasonToDisplayWorkouts(result.season);
+        setWorkouts(displayWorkouts);
+      } else if (result.error?.includes('No season found')) {
+        console.log('WorkoutsScreen - No existing season, building new one');
+        const buildResult = await workoutService.buildWorkoutSeason();
+        
+        if (buildResult.success && buildResult.season) {
+          console.log('WorkoutsScreen - New season built successfully');
+          const displayWorkouts = transformSeasonToDisplayWorkouts(buildResult.season);
+          setWorkouts(displayWorkouts);
+        } else {
+          console.log('WorkoutsScreen - Failed to build season:', buildResult.error);
+          setError(buildResult.error || 'Failed to build workout season');
+        }
+      } else {
+        console.log('WorkoutsScreen - Failed to load season:', result.error);
+        setError(result.error || 'Failed to load workout season');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.log('WorkoutsScreen - Exception fetching workouts:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWorkouts();
+  }, [fetchWorkouts]);
+
+  const handleWorkoutPress = (workout: DisplayWorkout, dayWorkout: DisplayDayWorkout) => {
     console.log('WorkoutsScreen - Workout pressed:', workout.id);
     navigation.navigate('WorkoutDetail', {
       workoutId: workout.id,
       workoutTitle: workout.title,
       day: dayWorkout.day,
-      duration: 40,
+      duration: workout.exercises.length * 5,
+      exercises: workout.exercises,
+      workoutGoal: workout.goal,
     });
   };
 
@@ -140,6 +190,27 @@ export const WorkoutsScreen: React.FC = () => {
     console.log('WorkoutsScreen - Refer friends pressed');
     navigation.navigate('ReferFriends');
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={colors.offWhite} />
+        <Text style={styles.loadingText}>Loading your workouts...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
+        <Icon name="error-outline" size={48} color={colors.offWhite} />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchWorkouts}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -167,8 +238,8 @@ export const WorkoutsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {mockWorkouts.map((dayWorkout, index) => {
-          const nextWorkout = mockWorkouts[index + 1];
+        {workouts.map((dayWorkout, index) => {
+          const nextWorkout = workouts[index + 1];
           const isNextCompleted = nextWorkout?.isCompleted ?? false;
           const hasDualWorkouts = dayWorkout.workouts.length === 2;
           
@@ -177,7 +248,7 @@ export const WorkoutsScreen: React.FC = () => {
               <TimelineIndicator
                 isCompleted={dayWorkout.isCompleted}
                 isFirst={index === 0}
-                isLast={index === mockWorkouts.length - 1}
+                isLast={index === workouts.length - 1}
                 isNextCompleted={isNextCompleted}
               />
               {hasDualWorkouts ? (
@@ -230,6 +301,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 18,
+    color: colors.offWhite,
+    marginTop: 16,
+  },
+  errorText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 18,
+    color: colors.offWhite,
+    marginTop: 16,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  retryButton: {
+    marginTop: 24,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    backgroundColor: colors.yellow,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 18,
+    color: colors.darkBrown,
   },
   header: {
     paddingHorizontal: 34,

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -16,7 +17,7 @@ import { RootStackParamList } from '../../types/navigation';
 
 type WorkoutDetailRouteProp = RouteProp<RootStackParamList, 'WorkoutDetail'>;
 
-interface Exercise {
+interface DisplayExercise {
   id: string;
   title: string;
   imageSource: number;
@@ -24,28 +25,88 @@ interface Exercise {
   isCompleted: boolean;
 }
 
+const getExerciseImage = (exerciseName: string): number => {
+  const name = exerciseName.toLowerCase();
+  
+  if (name.includes('squat') || name.includes('lunge') || name.includes('leg')) {
+    return require('../../assets/workouts/workout-lower-body.png');
+  }
+  if (name.includes('run')) {
+    return require('../../assets/workouts/workout-outdoor-run.png');
+  }
+  if (name.includes('swim')) {
+    return require('../../assets/workouts/workout-swim.png');
+  }
+  if (name.includes('yoga') || name.includes('stretch')) {
+    return require('../../assets/workouts/workout-hot-yoga.png');
+  }
+  if (name.includes('pilates')) {
+    return require('../../assets/workouts/workout-studio-pilates.png');
+  }
+  if (name.includes('plank') || name.includes('core') || name.includes('bridge')) {
+    return require('../../assets/workouts/workout-hot-yoga.png');
+  }
+  if (name.includes('press') || name.includes('push') || name.includes('bench')) {
+    return require('../../assets/workouts/workout-contrast-therapy.png');
+  }
+  if (name.includes('row') || name.includes('pull') || name.includes('deadlift')) {
+    return require('../../assets/workouts/workout-lower-body.png');
+  }
+  if (name.includes('hang') || name.includes('balance') || name.includes('walk')) {
+    return require('../../assets/workouts/workout-studio-pilates.png');
+  }
+  
+  return require('../../assets/workouts/workout-outdoor-run.png');
+};
+
+const formatExerciseTags = (
+  sets: number,
+  reps: number,
+  weight: number
+): { label: string }[] => {
+  const tags: { label: string }[] = [];
+  
+  tags.push({ label: `${sets} sets x ${reps} reps` });
+  
+  if (weight > 0) {
+    tags.push({ label: `${weight} lbs` });
+  } else {
+    tags.push({ label: 'Bodyweight' });
+  }
+  
+  return tags;
+};
+
 export const WorkoutDetailScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute<WorkoutDetailRouteProp>();
 
-  const { workoutTitle, day, date, duration } = route.params;
+  const { workoutTitle, day, date, duration, exercises: apiExercises, workoutGoal } = route.params;
 
-  const [exercises, setExercises] = useState<Exercise[]>([
-    {
-      id: '1',
-      title: 'Outdoor Run',
-      imageSource: require('../../assets/workouts/workout-outdoor-run.png'),
-      tags: [{ label: '3 miles' }, { label: 'Conversational pace' }],
-      isCompleted: false,
-    },
-  ]);
+  const [exercises, setExercises] = useState<DisplayExercise[]>([]);
+
+  useEffect(() => {
+    if (apiExercises && apiExercises.length > 0) {
+      const transformedExercises: DisplayExercise[] = apiExercises.map((exercise, index) => ({
+        id: `${index}-${exercise.name}`,
+        title: exercise.name,
+        imageSource: getExerciseImage(exercise.name),
+        tags: formatExerciseTags(exercise.sets, exercise.reps, exercise.weight),
+        isCompleted: false,
+      }));
+      setExercises(transformedExercises);
+    } else {
+      setExercises([]);
+    }
+  }, [apiExercises]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleAddExercise = () => {
+    Alert.alert('Under Development', 'This feature is coming soon.');
     console.log('WorkoutDetailScreen - Add exercise pressed');
   };
 
@@ -54,16 +115,12 @@ export const WorkoutDetailScreen: React.FC = () => {
   };
 
   const handleRemoveExercise = (exerciseId: string) => {
-    setExercises(prev => prev.filter(e => e.id !== exerciseId));
+    Alert.alert('Under Development', 'This feature is coming soon.');
     console.log('WorkoutDetailScreen - Remove exercise:', exerciseId);
   };
 
   const handleToggleComplete = (exerciseId: string) => {
-    setExercises(prev =>
-      prev.map(e =>
-        e.id === exerciseId ? { ...e, isCompleted: !e.isCompleted } : e,
-      ),
-    );
+    Alert.alert('Under Development', 'This feature is coming soon.');
     console.log('WorkoutDetailScreen - Toggle complete:', exerciseId);
   };
 
@@ -71,14 +128,16 @@ export const WorkoutDetailScreen: React.FC = () => {
     if (date) {
       return date;
     }
-    return `${day}, AUG 22`;
+    const now = new Date();
+    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return `${day}, ${monthNames[now.getMonth()]} ${now.getDate()}`;
   };
 
   const formatDuration = () => {
     if (duration) {
       return `${duration} MIN`;
     }
-    return '40 MIN';
+    return `${exercises.length * 5} MIN`;
   };
 
   return (
@@ -116,23 +175,38 @@ export const WorkoutDetailScreen: React.FC = () => {
         </View>
       </View>
 
+      {workoutGoal && (
+        <View style={styles.goalContainer}>
+          <Text style={styles.goalLabel}>GOAL</Text>
+          <Text style={styles.goalText}>{workoutGoal}</Text>
+        </View>
+      )}
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {exercises.map(exercise => (
-          <WorkoutExerciseCard
-            key={exercise.id}
-            title={exercise.title}
-            imageSource={exercise.imageSource}
-            tags={exercise.tags}
-            isCompleted={exercise.isCompleted}
-            onPress={() => handleExercisePress(exercise.id)}
-            onRemove={() => handleRemoveExercise(exercise.id)}
-            onToggleComplete={() => handleToggleComplete(exercise.id)}
-          />
-        ))}
+        {exercises.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon2 name="sleep" size={48} color={colors.offWhite} />
+            <Text style={styles.emptyText}>Rest Day</Text>
+            <Text style={styles.emptySubtext}>Take time to recover and recharge</Text>
+          </View>
+        ) : (
+          exercises.map(exercise => (
+            <WorkoutExerciseCard
+              key={exercise.id}
+              title={exercise.title}
+              imageSource={exercise.imageSource}
+              tags={exercise.tags}
+              isCompleted={exercise.isCompleted}
+              onPress={() => handleExercisePress(exercise.id)}
+              onRemove={() => handleRemoveExercise(exercise.id)}
+              onToggleComplete={() => handleToggleComplete(exercise.id)}
+            />
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -145,14 +219,14 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 16,
     paddingTop: 24,
     paddingBottom: 0,
   },
   backButton: {
     width: 24,
-    height: 24,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -164,11 +238,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Bebas Neue',
     fontSize: 32,
     color: colors.offWhite,
-    lineHeight: 51.2,
+    lineHeight: 40,
   },
   addButton: {
     width: 24,
-    height: 24,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -177,7 +251,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 35,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 8,
     gap: 17,
   },
   metaItem: {
@@ -192,10 +266,47 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     textTransform: 'uppercase',
   },
+  goalContainer: {
+    paddingHorizontal: 35,
+    paddingBottom: 16,
+  },
+  goalLabel: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 12,
+    color: colors.yellow,
+    lineHeight: 16,
+    textTransform: 'uppercase',
+  },
+  goalText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    lineHeight: 20,
+    marginTop: 2,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: 100,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 80,
+  },
+  emptyText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 24,
+    color: colors.offWhite,
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    opacity: 0.7,
+    marginTop: 8,
   },
 });
