@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../types/navigation';
 import { useRegistration } from '../../contexts/RegistrationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { profileService } from '../../services/profileService';
+import { workoutService } from '../../services/workoutService';
 import { colors } from '../../constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -35,6 +36,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   const [isApproved, setIsApproved] = useState(false);
   const [selectedButton, setSelectedButton] = useState<'approve' | null>(null);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [isBuildingWorkout, setIsBuildingWorkout] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -129,17 +131,34 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
       registrationData as any
     );
 
-    setIsCreatingProfile(false);
-
-    if (profileResult.success) {
-      console.log('RegisterSummaryReviewScreen - Profile created successfully, registration complete');
-      clearRegistrationData();
-      navigation.replace('MainTabs');
-    } else {
+    if (!profileResult.success) {
+      setIsCreatingProfile(false);
       console.log('RegisterSummaryReviewScreen - Error creating profile:', profileResult.error);
       Alert.alert(
         'Error',
         profileResult.error || 'Failed to create profile. Please try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('RegisterSummaryReviewScreen - Profile created successfully, building workout season');
+    setIsCreatingProfile(false);
+    setIsBuildingWorkout(true);
+
+    const buildResult = await workoutService.buildWorkoutSeason(user.id);
+
+    setIsBuildingWorkout(false);
+
+    if (buildResult.success) {
+      console.log('RegisterSummaryReviewScreen - Workout season built successfully, registration complete');
+      clearRegistrationData();
+      navigation.replace('MainTabs');
+    } else {
+      console.log('RegisterSummaryReviewScreen - Error building workout season:', buildResult.error);
+      Alert.alert(
+        'Error',
+        buildResult.error || 'Failed to build workout plan. Please try again.',
         [{ text: 'OK' }]
       );
     }
@@ -216,13 +235,26 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
               </View>
 
               <TouchableOpacity
-                style={styles.getStartedButton}
+                style={[
+                  styles.getStartedButton,
+                  isBuildingWorkout && styles.getStartedButtonExpanded,
+                ]}
                 onPress={handleGetStarted}
                 activeOpacity={0.7}
-                disabled={isCreatingProfile}
+                disabled={isCreatingProfile || isBuildingWorkout}
               >
-                {isCreatingProfile ? (
-                  <ActivityIndicator size="small" color={colors.darkBrown} />
+                {isCreatingProfile || isBuildingWorkout ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={colors.darkBrown} />
+                    <View style={styles.loadingTextContainer}>
+                      <Text style={styles.loadingText}>
+                        {isBuildingWorkout ? 'Building your workout plan...' : 'Creating profile...'}
+                      </Text>
+                      {isBuildingWorkout && (
+                        <Text style={styles.loadingSubText}>It can take up to 20 seconds</Text>
+                      )}
+                    </View>
+                  </View>
                 ) : (
                   <Text style={styles.getStartedButtonText}>Get Started</Text>
                 )}
@@ -389,6 +421,31 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.darkBrown,
     textAlign: 'center',
+  },
+  getStartedButtonExpanded: {
+    height: 60,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingTextContainer: {
+    alignItems: 'flex-start',
+  },
+  loadingText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.darkBrown,
+  },
+  loadingSubText: {
+    fontFamily: 'Roboto',
+    fontSize: 11,
+    fontWeight: '400',
+    color: colors.darkBrown,
+    opacity: 0.7,
+    marginTop: 2,
   },
 });
 

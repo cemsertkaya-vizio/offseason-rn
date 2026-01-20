@@ -17,6 +17,7 @@ import { WorkoutCard } from '../../components/WorkoutCard';
 import { TimelineIndicator } from '../../components/TimelineIndicator';
 import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { getCurrentWeekRange } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../types/navigation';
 import { workoutService } from '../../services/workoutService';
@@ -125,6 +126,7 @@ export const WorkoutsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { profile } = useProfile();
+  const { user } = useAuth();
   const userName = profile?.first_name || '';
   const weekRange = getCurrentWeekRange();
   const goals = profile?.goals || [];
@@ -134,12 +136,19 @@ export const WorkoutsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchWorkouts = useCallback(async () => {
+    if (!user?.id) {
+      console.log('WorkoutsScreen - No user authenticated, skipping fetch');
+      setError('User not authenticated');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('WorkoutsScreen - Fetching workout season');
-      const result = await workoutService.loadExistingSeason();
+      console.log('WorkoutsScreen - Fetching workout season for user:', user.id);
+      const result = await workoutService.loadExistingSeason(user.id);
 
       if (result.success && result.season) {
         console.log('WorkoutsScreen - Season loaded successfully');
@@ -147,7 +156,7 @@ export const WorkoutsScreen: React.FC = () => {
         setWorkouts(displayWorkouts);
       } else if (result.error?.includes('No season found')) {
         console.log('WorkoutsScreen - No existing season, building new one');
-        const buildResult = await workoutService.buildWorkoutSeason();
+        const buildResult = await workoutService.buildWorkoutSeason(user.id);
         
         if (buildResult.success && buildResult.season) {
           console.log('WorkoutsScreen - New season built successfully');
@@ -168,7 +177,7 @@ export const WorkoutsScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchWorkouts();

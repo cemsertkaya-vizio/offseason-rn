@@ -6,11 +6,10 @@ import type {
 } from '../types/workout';
 
 const API_BASE_URL = 'https://offseason.onrender.com';
-const SAMPLE_USER_ID = '14e633f3-6837-41e6-b95d-6da409963eea';
 
 export const workoutService = {
   loadExistingSeason: async (
-    userId: string = SAMPLE_USER_ID
+    userId: string
   ): Promise<{ success: boolean; season?: Season; error?: string }> => {
     try {
       console.log('workoutService - Loading existing season for user:', userId);
@@ -42,7 +41,7 @@ export const workoutService = {
   },
 
   buildWorkoutSeason: async (
-    userId: string = SAMPLE_USER_ID
+    userId: string
   ): Promise<{ success: boolean; season?: Season; response?: string; error?: string }> => {
     try {
       console.log('workoutService - Building new season for user:', userId);
