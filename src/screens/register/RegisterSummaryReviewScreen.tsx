@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { useRegistration } from '../../contexts/RegistrationContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProfile } from '../../contexts/ProfileContext';
 import { profileService } from '../../services/profileService';
 import { workoutService } from '../../services/workoutService';
 import { colors } from '../../constants/colors';
@@ -33,6 +34,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
 }) => {
   const { registrationData, updateRegistrationData, clearRegistrationData } = useRegistration();
   const { user } = useAuth();
+  const { refreshProfile } = useProfile();
   const [isApproved, setIsApproved] = useState(false);
   const [selectedButton, setSelectedButton] = useState<'approve' | null>(null);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
@@ -153,6 +155,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
     if (buildResult.success) {
       console.log('RegisterSummaryReviewScreen - Workout season built successfully, registration complete');
       clearRegistrationData();
+      await refreshProfile();
       navigation.replace('MainTabs');
     } else {
       console.log('RegisterSummaryReviewScreen - Error building workout season:', buildResult.error);
