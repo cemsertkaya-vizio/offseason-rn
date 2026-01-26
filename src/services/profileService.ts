@@ -205,5 +205,60 @@ export const profileService = {
       return { success: false, error: errorMessage };
     }
   },
+
+  updateProfileImage: async (
+    userId: string,
+    imageUrl: string
+  ): Promise<{ success: boolean; profile?: ProfileData; error?: string }> => {
+    try {
+      console.log('profileService - Updating profile image for user:', userId);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ profile_image_url: imageUrl })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.log('profileService - Error updating profile image:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      console.log('profileService - Profile image updated successfully');
+      return { success: true, profile: data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('profileService - Exception updating profile image:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  removeProfileImage: async (
+    userId: string
+  ): Promise<{ success: boolean; profile?: ProfileData; error?: string }> => {
+    try {
+      console.log('profileService - Removing profile image for user:', userId);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ profile_image_url: null })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.log('profileService - Error removing profile image:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      console.log('profileService - Profile image removed successfully');
+      return { success: true, profile: data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('profileService - Exception removing profile image:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
 };
 

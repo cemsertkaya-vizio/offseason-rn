@@ -5,3 +5,5 @@ export * from './ProfileScreen';
 export * from './ReferFriendsScreen';
 export * from './AiChatScreen';
 export * from './WorkoutDetailScreen';
+export * from './EditLocationScreen';
+export * from './EditSummaryScreen';

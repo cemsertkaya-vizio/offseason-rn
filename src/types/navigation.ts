@@ -20,6 +20,8 @@ export type RootStackParamList = {
   RegisterCoreProfile: undefined;
   RegisterPhysicalInfo: undefined;
   RegisterLocation: undefined;
+  EditLocation: undefined;
+  EditSummary: undefined;
   RegisterPreferences: undefined;
   RegisterSchedule: { activities?: string[] };
   RegisterPreferredDays: { activities?: string[] };

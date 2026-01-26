@@ -68,6 +68,7 @@ export interface ProfileData {
   preferred_days?: Record<string, string[]>;
   goals?: GoalData[];
   profile_summary?: string;
+  profile_image_url?: string;
   onboarding_step?: string;
   onboarding_data?: Record<string, any>;
   registration_completed_at?: string;
