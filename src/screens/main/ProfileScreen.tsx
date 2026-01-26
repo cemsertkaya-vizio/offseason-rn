@@ -123,58 +123,77 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
-  const handlePhotoOption = async (option: 'library' | 'camera' | 'remove') => {
+  const handlePhotoOption = (option: 'library' | 'camera' | 'remove') => {
     setShowPhotoActionSheet(false);
     console.log('ProfileScreen - Photo option selected:', option);
 
-    if (option === 'library') {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.8,
-        maxWidth: 1024,
-        maxHeight: 1024,
-      });
+    // Delay picker launch to allow modal to close first
+    // This prevents conflicts on iOS when presenting the picker while modal animates
+    setTimeout(async () => {
+      if (option === 'library') {
+        const result = await launchImageLibrary({
+          mediaType: 'photo',
+          quality: 0.8,
+          maxWidth: 1024,
+          maxHeight: 1024,
+        });
 
-      if (result.assets && result.assets[0]?.uri) {
-        await uploadImage(result.assets[0].uri);
+        if (result.errorCode) {
+          console.log('ProfileScreen - Image picker error:', result.errorCode, result.errorMessage);
+          return;
+        }
+
+        if (result.assets && result.assets[0]?.uri) {
+          await uploadImage(result.assets[0].uri);
+        }
+      } else if (option === 'camera') {
+        const result = await launchCamera({
+          mediaType: 'photo',
+          quality: 0.8,
+          maxWidth: 1024,
+          maxHeight: 1024,
+        });
+
+        if (result.errorCode) {
+          console.log('ProfileScreen - Camera error:', result.errorCode, result.errorMessage);
+          return;
+        }
+
+        if (result.assets && result.assets[0]?.uri) {
+          await uploadImage(result.assets[0].uri);
+        }
+      } else if (option === 'remove') {
+        await handleRemoveImage();
       }
-    } else if (option === 'camera') {
-      const result = await launchCamera({
-        mediaType: 'photo',
-        quality: 0.8,
-        maxWidth: 1024,
-        maxHeight: 1024,
-      });
+    }, 400);
+  };
 
-      if (result.assets && result.assets[0]?.uri) {
-        await uploadImage(result.assets[0].uri);
-      }
-    } else if (option === 'remove') {
-      if (!user?.id) {
-        Alert.alert('Error', 'User not authenticated');
-        return;
-      }
+  const handleRemoveImage = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
 
-      setIsUploadingImage(true);
+    setIsUploadingImage(true);
 
-      const deleteResult = await storageService.deleteProfileImage(user.id);
-      if (!deleteResult.success) {
-        setIsUploadingImage(false);
-        Alert.alert('Error', deleteResult.error || 'Failed to delete image');
-        return;
-      }
-
-      const updateResult = await profileService.removeProfileImage(user.id);
+    const deleteResult = await storageService.deleteProfileImage(user.id);
+    if (!deleteResult.success) {
       setIsUploadingImage(false);
+      Alert.alert('Error', deleteResult.error || 'Failed to delete image');
+      return;
+    }
 
-      if (updateResult.success) {
-        console.log('ProfileScreen - Profile image removed successfully');
-        refreshProfile();
-      } else {
-        Alert.alert('Error', updateResult.error || 'Failed to update profile');
-      }
+    const updateResult = await profileService.removeProfileImage(user.id);
+    setIsUploadingImage(false);
+
+    if (updateResult.success) {
+      console.log('ProfileScreen - Profile image removed successfully');
+      refreshProfile();
+    } else {
+      Alert.alert('Error', updateResult.error || 'Failed to update profile');
     }
   };
+
 
   const handleReferFriends = () => {
     console.log('ProfileScreen - Navigating to ReferFriends');
@@ -439,11 +458,12 @@ export const ProfileScreen: React.FC = () => {
         animationType="slide"
         onRequestClose={() => setShowPhotoActionSheet(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowPhotoActionSheet(false)}
-        >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowPhotoActionSheet(false)}
+          />
           <View style={styles.actionSheetContainer}>
             <View style={styles.actionSheetContent}>
               <Text style={styles.actionSheetTitle}>Change Image</Text>
@@ -477,7 +497,7 @@ export const ProfileScreen: React.FC = () => {
               <Text style={styles.actionSheetCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       <Modal
@@ -715,8 +735,11 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   actionSheetContainer: {
     paddingHorizontal: 8,
