@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,22 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
+  LayoutChangeEvent,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+  GestureHandlerRootView,
+  LongPressGestureHandler,
+  PanGestureHandler,
+  State,
+  LongPressGestureHandlerStateChangeEvent,
+  PanGestureHandlerGestureEvent,
+  PanGestureHandlerStateChangeEvent,
+} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../constants/colors';
@@ -17,10 +29,9 @@ import { WorkoutCard } from '../../components/WorkoutCard';
 import { TimelineIndicator } from '../../components/TimelineIndicator';
 import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useWorkout } from '../../contexts/WorkoutContext';
 import { getCurrentWeekRange } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../types/navigation';
-import { workoutService } from '../../services/workoutService';
 import type { Season, DayWorkout, WorkoutExercise } from '../../types/workout';
 
 interface DisplayWorkout {
@@ -122,66 +133,92 @@ const transformSeasonToDisplayWorkouts = (season: Season): DisplayDayWorkout[] =
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+const CARD_HEIGHT = 76;
+
 export const WorkoutsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { profile } = useProfile();
-  const { user } = useAuth();
+  const { season, isLoading, error, refreshSeason, swapDays, isSaving } = useWorkout();
   const userName = profile?.first_name || '';
   const weekRange = getCurrentWeekRange();
   const goals = profile?.goals || [];
 
-  const [workouts, setWorkouts] = useState<DisplayDayWorkout[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [targetIndex, setTargetIndex] = useState<number | null>(null);
+  const dragY = useRef(new Animated.Value(0)).current;
+  const rowPositions = useRef<number[]>([]);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const panRef = useRef(null);
+  const longPressRef = useRef(null);
 
-  const fetchWorkouts = useCallback(async () => {
-    if (!user?.id) {
-      console.log('WorkoutsScreen - No user authenticated, skipping fetch');
-      setError('User not authenticated');
-      setIsLoading(false);
-      return;
+  const workouts = useMemo(() => {
+    if (!season) {
+      return [];
     }
+    return transformSeasonToDisplayWorkouts(season);
+  }, [season]);
 
-    setIsLoading(true);
-    setError(null);
+  const handleRowLayout = useCallback((index: number, event: LayoutChangeEvent) => {
+    const { y } = event.nativeEvent.layout;
+    rowPositions.current[index] = y;
+  }, []);
 
-    try {
-      console.log('WorkoutsScreen - Fetching workout season for user:', user.id);
-      const result = await workoutService.loadExistingSeason(user.id);
+  const getTargetIndexFromY = useCallback((currentY: number, originIndex: number): number | null => {
+    const positions = rowPositions.current;
+    const originY = positions[originIndex] || 0;
+    const absoluteY = originY + currentY;
 
-      if (result.success && result.season) {
-        console.log('WorkoutsScreen - Season loaded successfully');
-        const displayWorkouts = transformSeasonToDisplayWorkouts(result.season);
-        setWorkouts(displayWorkouts);
-      } else if (result.error?.includes('No season found')) {
-        console.log('WorkoutsScreen - No existing season, building new one');
-        const buildResult = await workoutService.buildWorkoutSeason(user.id);
-        
-        if (buildResult.success && buildResult.season) {
-          console.log('WorkoutsScreen - New season built successfully');
-          const displayWorkouts = transformSeasonToDisplayWorkouts(buildResult.season);
-          setWorkouts(displayWorkouts);
-        } else {
-          console.log('WorkoutsScreen - Failed to build season:', buildResult.error);
-          setError(buildResult.error || 'Failed to build workout season');
-        }
-      } else {
-        console.log('WorkoutsScreen - Failed to load season:', result.error);
-        setError(result.error || 'Failed to load workout season');
+    for (let i = 0; i < positions.length; i++) {
+      if (i === originIndex) continue;
+      const rowY = positions[i];
+      if (absoluteY >= rowY - CARD_HEIGHT / 2 && absoluteY < rowY + CARD_HEIGHT / 2) {
+        return i;
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.log('WorkoutsScreen - Exception fetching workouts:', errorMessage);
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
-  }, [user?.id]);
+    return null;
+  }, []);
 
-  useEffect(() => {
-    fetchWorkouts();
-  }, [fetchWorkouts]);
+  const handleLongPressStateChange = useCallback((index: number, event: LongPressGestureHandlerStateChangeEvent) => {
+    if (event.nativeEvent.state === State.ACTIVE) {
+      console.log('WorkoutsScreen - Long press activated on day:', workouts[index]?.day);
+      setDraggingIndex(index);
+      dragY.setValue(0);
+    }
+  }, [workouts, dragY]);
+
+  const handlePanGestureEvent = useCallback((index: number, event: PanGestureHandlerGestureEvent) => {
+    if (draggingIndex !== index) return;
+    
+    const { translationY } = event.nativeEvent;
+    dragY.setValue(translationY);
+    
+    const newTarget = getTargetIndexFromY(translationY, index);
+    if (newTarget !== targetIndex) {
+      setTargetIndex(newTarget);
+    }
+  }, [draggingIndex, dragY, getTargetIndexFromY, targetIndex]);
+
+  const handlePanStateChange = useCallback(async (index: number, event: PanGestureHandlerStateChangeEvent) => {
+    if (event.nativeEvent.state === State.END || event.nativeEvent.state === State.CANCELLED) {
+      if (draggingIndex !== null && targetIndex !== null && draggingIndex !== targetIndex) {
+        const fromDay = workouts[draggingIndex]?.day;
+        const toDay = workouts[targetIndex]?.day;
+        
+        if (fromDay && toDay) {
+          console.log('WorkoutsScreen - Swapping days:', fromDay, 'with', toDay);
+          const success = await swapDays(fromDay, toDay);
+          if (!success) {
+            Alert.alert('Error', 'Failed to swap workouts. Please try again.');
+          }
+        }
+      }
+      
+      setDraggingIndex(null);
+      setTargetIndex(null);
+      dragY.setValue(0);
+    }
+  }, [draggingIndex, targetIndex, workouts, swapDays, dragY]);
 
   const handleWorkoutPress = (workout: DisplayWorkout, dayWorkout: DisplayDayWorkout) => {
     console.log('WorkoutsScreen - Workout pressed:', workout.id);
@@ -214,99 +251,154 @@ export const WorkoutsScreen: React.FC = () => {
       <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
         <Icon name="error-outline" size={48} color={colors.offWhite} />
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchWorkouts}>
+        <TouchableOpacity style={styles.retryButton} onPress={refreshSeason}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome back, {userName}</Text>
-        <View style={styles.subHeader}>
-          <View style={styles.weekContainer}>
-            <Icon2 name="calendar-blank" size={16} color={colors.offWhite} />
-            <Text style={styles.weekText}>Week of {weekRange}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.referContainer}
-            onPress={handleReferFriendsPress}
-          >
-            <Icon name="navigation" size={14} color={colors.yellow} />
-            <Text style={styles.referText}>refer friends</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+  const renderWorkoutRow = (dayWorkout: DisplayDayWorkout, index: number) => {
+    const nextWorkout = workouts[index + 1];
+    const isNextCompleted = nextWorkout?.isCompleted ?? false;
+    const hasDualWorkouts = dayWorkout.workouts.length === 2;
+    const isDragging = draggingIndex === index;
+    const isTarget = targetIndex === index;
 
-      <GoalsDisplay goals={goals} />
+    const animatedStyle = isDragging
+      ? {
+          transform: [{ translateY: dragY }],
+          zIndex: 1000,
+          elevation: 10,
+        }
+      : {};
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    const rowContent = (
+      <Animated.View
+        style={[
+          styles.workoutRow,
+          animatedStyle,
+          isDragging && styles.draggingRow,
+          isTarget && styles.targetRow,
+        ]}
+        onLayout={(e) => handleRowLayout(index, e)}
       >
-        {workouts.map((dayWorkout, index) => {
-          const nextWorkout = workouts[index + 1];
-          const isNextCompleted = nextWorkout?.isCompleted ?? false;
-          const hasDualWorkouts = dayWorkout.workouts.length === 2;
-          
-          return (
-            <View key={dayWorkout.day} style={styles.workoutRow}>
-              <TimelineIndicator
-                isCompleted={dayWorkout.isCompleted}
-                isFirst={index === 0}
-                isLast={index === workouts.length - 1}
-                isNextCompleted={isNextCompleted}
+        <TimelineIndicator
+          isCompleted={dayWorkout.isCompleted}
+          isFirst={index === 0}
+          isLast={index === workouts.length - 1}
+          isNextCompleted={isNextCompleted}
+        />
+        {hasDualWorkouts ? (
+          <View style={styles.dualCardWrapper}>
+            <View style={styles.leftCardWrapper}>
+              <WorkoutCard
+                day={dayWorkout.day}
+                title={dayWorkout.workouts[0].title}
+                imageSource={dayWorkout.workouts[0].imageSource}
+                onPress={() => !isDragging && handleWorkoutPress(dayWorkout.workouts[0], dayWorkout)}
+                position="left"
+                showDay={true}
+                showArrow={false}
               />
-              {hasDualWorkouts ? (
-                <View style={styles.dualCardWrapper}>
-                  <View style={styles.leftCardWrapper}>
-                    <WorkoutCard
-                      day={dayWorkout.day}
-                      title={dayWorkout.workouts[0].title}
-                      imageSource={dayWorkout.workouts[0].imageSource}
-                      onPress={() => handleWorkoutPress(dayWorkout.workouts[0], dayWorkout)}
-                      position="left"
-                      showDay={true}
-                      showArrow={false}
-                    />
-                  </View>
-                  <View style={styles.rightCardWrapper}>
-                    <WorkoutCard
-                      day={dayWorkout.day}
-                      title={dayWorkout.workouts[1].title}
-                      imageSource={dayWorkout.workouts[1].imageSource}
-                      onPress={() => handleWorkoutPress(dayWorkout.workouts[1], dayWorkout)}
-                      position="right"
-                      showDay={false}
-                      showArrow={true}
-                    />
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.cardWrapper}>
-                  <WorkoutCard
-                    day={dayWorkout.day}
-                    title={dayWorkout.workouts[0].title}
-                    imageSource={dayWorkout.workouts[0].imageSource}
-                    onPress={() => handleWorkoutPress(dayWorkout.workouts[0], dayWorkout)}
-                  />
-                </View>
-              )}
             </View>
-          );
-        })}
-        <View style={styles.expandIndicator}>
-          <Icon name="keyboard-arrow-down" size={24} color={colors.offWhite} />
+            <View style={styles.rightCardWrapper}>
+              <WorkoutCard
+                day={dayWorkout.day}
+                title={dayWorkout.workouts[1].title}
+                imageSource={dayWorkout.workouts[1].imageSource}
+                onPress={() => !isDragging && handleWorkoutPress(dayWorkout.workouts[1], dayWorkout)}
+                position="right"
+                showDay={false}
+                showArrow={true}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.cardWrapper}>
+            <WorkoutCard
+              day={dayWorkout.day}
+              title={dayWorkout.workouts[0].title}
+              imageSource={dayWorkout.workouts[0].imageSource}
+              onPress={() => !isDragging && handleWorkoutPress(dayWorkout.workouts[0], dayWorkout)}
+            />
+          </View>
+        )}
+      </Animated.View>
+    );
+
+    return (
+      <LongPressGestureHandler
+        key={dayWorkout.day}
+        ref={longPressRef}
+        onHandlerStateChange={(e) => handleLongPressStateChange(index, e)}
+        minDurationMs={400}
+        enabled={!isSaving}
+      >
+        <View>
+          <PanGestureHandler
+            ref={panRef}
+            onGestureEvent={(e) => handlePanGestureEvent(index, e)}
+            onHandlerStateChange={(e) => handlePanStateChange(index, e)}
+            enabled={draggingIndex === index}
+          >
+            {rowContent}
+          </PanGestureHandler>
         </View>
-      </ScrollView>
-    </View>
+      </LongPressGestureHandler>
+    );
+  };
+
+  return (
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <Text style={styles.welcomeText}>Welcome back, {userName}</Text>
+          <View style={styles.subHeader}>
+            <View style={styles.weekContainer}>
+              <Icon2 name="calendar-blank" size={16} color={colors.offWhite} />
+              <Text style={styles.weekText}>Week of {weekRange}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.referContainer}
+              onPress={handleReferFriendsPress}
+            >
+              <Icon name="navigation" size={14} color={colors.yellow} />
+              <Text style={styles.referText}>refer friends</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {draggingIndex !== null && (
+          <View style={styles.dragHint}>
+            <Icon name="swap-vert" size={16} color={colors.yellow} />
+            <Text style={styles.dragHintText}>Drag to swap with another day</Text>
+          </View>
+        )}
+
+        <GoalsDisplay goals={goals} />
+
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={draggingIndex === null}
+        >
+          {workouts.map((dayWorkout, index) => renderWorkoutRow(dayWorkout, index))}
+          <View style={styles.expandIndicator}>
+            <Icon name="keyboard-arrow-down" size={24} color={colors.offWhite} />
+          </View>
+        </ScrollView>
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.darkBrown,
@@ -416,5 +508,38 @@ const styles = StyleSheet.create({
   expandIndicator: {
     alignItems: 'center',
     paddingVertical: 16,
+  },
+  draggingRow: {
+    opacity: 0.9,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    backgroundColor: colors.darkBrown,
+    borderRadius: 12,
+  },
+  targetRow: {
+    backgroundColor: 'rgba(255, 204, 51, 0.2)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.yellow,
+    borderStyle: 'dashed',
+  },
+  dragHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 204, 51, 0.15)',
+    marginHorizontal: 34,
+    borderRadius: 8,
+    gap: 8,
+  },
+  dragHintText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 14,
+    color: colors.yellow,
+    textTransform: 'uppercase',
   },
 });

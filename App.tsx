@@ -13,18 +13,21 @@ import { RootNavigator } from './src/navigation';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ProfileProvider } from './src/contexts/ProfileContext';
 import { RegistrationProvider } from './src/contexts/RegistrationContext';
+import { WorkoutProvider } from './src/contexts/WorkoutContext';
 
 function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
         <ProfileProvider>
-          <RegistrationProvider>
-            <NavigationContainer>
-              <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
-              <RootNavigator />
-            </NavigationContainer>
-          </RegistrationProvider>
+          <WorkoutProvider>
+            <RegistrationProvider>
+              <NavigationContainer>
+                <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
+                <RootNavigator />
+              </NavigationContainer>
+            </RegistrationProvider>
+          </WorkoutProvider>
         </ProfileProvider>
       </AuthProvider>
     </SafeAreaProvider>

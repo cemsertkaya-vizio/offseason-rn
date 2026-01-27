@@ -3,6 +3,7 @@ export interface WorkoutExercise {
   sets: number;
   reps: number;
   weight: number;
+  completed?: boolean;
 }
 
 export interface DayWorkout {

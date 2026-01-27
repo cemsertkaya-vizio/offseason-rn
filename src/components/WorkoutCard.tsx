@@ -17,6 +17,7 @@ interface WorkoutCardProps {
   title: string;
   imageSource: ImageSourcePropType;
   onPress: () => void;
+  onEdit?: () => void;
   position?: CardPosition;
   showDay?: boolean;
   showArrow?: boolean;
@@ -27,6 +28,7 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
   title,
   imageSource,
   onPress,
+  onEdit,
   position = 'full',
   showDay = true,
   showArrow = true,
@@ -64,7 +66,7 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
         style={getImageStyle()}
         resizeMode="cover"
       />
-      <View style={[styles.contentContainer, showArrow && styles.contentWithArrow]}>
+      <View style={[styles.contentContainer, (showArrow || onEdit) && styles.contentWithArrow]}>
         {showDay && <Text style={styles.dayText}>{day.toUpperCase()}</Text>}
         <Text
           style={[styles.titleText, !showDay && styles.titleTextNoDay]}
@@ -75,6 +77,15 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
           {title.toUpperCase()}
         </Text>
       </View>
+      {onEdit && (
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={onEdit}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Icon name="edit" size={18} color={colors.yellow} />
+        </TouchableOpacity>
+      )}
       {showArrow && (
         <View style={styles.arrowContainer}>
           <Icon name="chevron-right" size={24} color={colors.offWhite} />
@@ -182,5 +193,16 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     justifyContent: 'center',
+  },
+  editButton: {
+    position: 'absolute',
+    right: 40,
+    top: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

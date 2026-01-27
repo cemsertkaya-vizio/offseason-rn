@@ -1,4 +1,4 @@
-import type { WorkoutExercise } from './workout';
+import type { WorkoutExercise, DayWorkout } from './workout';
 
 export type MainTabParamList = {
   Workouts: undefined;
@@ -70,6 +70,10 @@ export type RootStackParamList = {
     duration?: number;
     exercises?: WorkoutExercise[];
     workoutGoal?: string;
+  };
+  EditWorkoutDay: {
+    day: string;
+    dayWorkout: DayWorkout;
   };
 };
 

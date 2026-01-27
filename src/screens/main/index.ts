@@ -7,3 +7,4 @@ export * from './AiChatScreen';
 export * from './WorkoutDetailScreen';
 export * from './EditLocationScreen';
 export * from './EditSummaryScreen';
+export * from './EditWorkoutDayScreen';
