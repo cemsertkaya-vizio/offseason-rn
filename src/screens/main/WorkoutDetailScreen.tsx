@@ -116,6 +116,7 @@ export const WorkoutDetailScreen: React.FC = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [formData, setFormData] = useState<ExerciseFormData>(initialFormData);
+  const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
 
   const refreshExercises = useCallback(() => {
     const dayWorkout = getDayWorkout(day);
@@ -156,8 +157,10 @@ export const WorkoutDetailScreen: React.FC = () => {
     console.log('WorkoutDetailScreen - Exercise pressed:', exerciseIndex);
     if (expandedIndex === exerciseIndex) {
       setExpandedIndex(null);
+      setPlayingVideoIndex(null);
     } else {
       setExpandedIndex(exerciseIndex);
+      setPlayingVideoIndex(null);
     }
   };
 
@@ -248,6 +251,15 @@ export const WorkoutDetailScreen: React.FC = () => {
     setEditingIndex(null);
     setEditMode(null);
     setFormData(initialFormData);
+  };
+
+  const handlePlayPress = (exerciseIndex: number) => {
+    console.log('WorkoutDetailScreen - Play button pressed for exercise:', exerciseIndex);
+    if (playingVideoIndex === exerciseIndex) {
+      setPlayingVideoIndex(null);
+    } else {
+      setPlayingVideoIndex(exerciseIndex);
+    }
   };
 
   const handleSaveExercise = async () => {
@@ -409,9 +421,11 @@ export const WorkoutDetailScreen: React.FC = () => {
                 tags={exercise.tags}
                 isCompleted={exercise.isCompleted}
                 isExpanded={expandedIndex === index}
+                isVideoPlaying={playingVideoIndex === index}
                 instructions={exercise.instructions}
                 activeAction={getActiveAction()}
                 onPress={() => handleExercisePress(index)}
+                onPlayPress={() => handlePlayPress(index)}
                 onEditWeight={() => handleEditWeight(index)}
                 onEditSets={() => handleEditSets(index)}
                 onEditReps={() => handleEditReps(index)}

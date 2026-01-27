@@ -8,7 +8,10 @@ import {
   ImageSourcePropType,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Video from 'react-native-video';
 import { colors } from '../constants/colors';
+
+const workoutSampleVideo = require('../assets/workout-sample.mp4');
 
 const editWeightIcon = require('../assets/workouts/workout-edit/ion_barbell-outline.png');
 const editSetsIcon = require('../assets/workouts/workout-edit/basil_stack-outline.png');
@@ -28,9 +31,11 @@ interface WorkoutExerciseCardProps {
   tags?: Tag[];
   isCompleted?: boolean;
   isExpanded?: boolean;
+  isVideoPlaying?: boolean;
   instructions?: string[];
   activeAction?: ActionType;
   onPress?: () => void;
+  onPlayPress?: () => void;
   onEditWeight?: () => void;
   onEditSets?: () => void;
   onEditReps?: () => void;
@@ -44,9 +49,11 @@ export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
   tags = [],
   isCompleted = false,
   isExpanded = false,
+  isVideoPlaying = false,
   instructions = [],
   activeAction = null,
   onPress,
+  onPlayPress,
   onEditWeight,
   onEditSets,
   onEditReps,
@@ -92,12 +99,35 @@ export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
         </TouchableOpacity>
 
         <View style={styles.expandedImageContainer}>
-          <Image source={imageSource} style={styles.expandedImage} resizeMode="cover" />
-          <View style={styles.playButtonOverlay}>
-            <View style={styles.playButton}>
-              <Icon name="play-arrow" size={32} color={colors.offWhite} />
-            </View>
-          </View>
+          {isVideoPlaying ? (
+            <TouchableOpacity 
+              style={styles.videoTouchable}
+              onPress={onPlayPress}
+              activeOpacity={1}
+            >
+              <Video
+                source={workoutSampleVideo}
+                style={styles.expandedVideo}
+                resizeMode="cover"
+                repeat={false}
+                controls={false}
+                onEnd={onPlayPress}
+              />
+            </TouchableOpacity>
+          ) : (
+            <>
+              <Image source={imageSource} style={styles.expandedImage} resizeMode="cover" />
+              <TouchableOpacity 
+                style={styles.playButtonOverlay}
+                onPress={onPlayPress}
+                activeOpacity={0.8}
+              >
+                <View style={styles.playButton}>
+                  <Icon name="play-arrow" size={32} color={colors.offWhite} />
+                </View>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {instructions.length > 0 && (
@@ -323,11 +353,19 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  expandedVideo: {
+    width: '100%',
+    height: '100%',
+  },
   playButtonOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  videoTouchable: {
+    width: '100%',
+    height: '100%',
   },
   playButton: {
     width: 56,
