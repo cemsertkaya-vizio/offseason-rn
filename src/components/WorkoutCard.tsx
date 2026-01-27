@@ -17,6 +17,7 @@ interface WorkoutCardProps {
   title: string;
   imageSource: ImageSourcePropType;
   onPress: () => void;
+  onLongPress?: () => void;
   onEdit?: () => void;
   position?: CardPosition;
   showDay?: boolean;
@@ -28,6 +29,7 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
   title,
   imageSource,
   onPress,
+  onLongPress,
   onEdit,
   position = 'full',
   showDay = true,
@@ -58,6 +60,8 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
   return (
     <TouchableOpacity
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={150}
       activeOpacity={0.8}
       style={getContainerStyle()}
     >
