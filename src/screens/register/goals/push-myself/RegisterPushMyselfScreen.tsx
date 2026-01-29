@@ -157,40 +157,39 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
         />
       </View>
 
-      <View style={styles.content}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.title}>PUSH MYSELF</Text>
-          <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>PUSH MYSELF</Text>
+        <Text style={styles.subtitle}>Let's break this down a bit more.</Text>
 
-          <Text style={styles.question}>How do you want to push yourself more?</Text>
+        <Text style={styles.question}>How do you want to push yourself more?</Text>
 
-          <View style={styles.optionsContainer}>
-            {PUSH_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.id}
+        <View style={styles.optionsContainer}>
+          {PUSH_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.optionButton,
+                selectedPush === option.id && styles.optionButtonSelected,
+              ]}
+              onPress={() => setSelectedPush(option.id)}
+              activeOpacity={0.7}
+            >
+              <Text
                 style={[
-                  styles.optionButton,
-                  selectedPush === option.id && styles.optionButtonSelected,
+                  styles.optionText,
+                  selectedPush === option.id && styles.optionTextSelected,
                 ]}
-                onPress={() => setSelectedPush(option.id)}
-                activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    styles.optionText,
-                    selectedPush === option.id && styles.optionTextSelected,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
       <NavigationArrows
         onBackPress={handleBack}
@@ -235,8 +234,7 @@ const styles = StyleSheet.create({
     marginTop: IMAGE_HEIGHT - 30,
   },
   scrollContent: {
-    paddingBottom: 130,
-    paddingHorizontal: 42,
+    paddingBottom: 20,
     alignItems: 'center',
   },
   title: {
@@ -254,34 +252,34 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: colors.offWhite,
     textAlign: 'center',
-    marginBottom: 52,
+    marginBottom: 35,
   },
   question: {
     fontFamily: 'Roboto',
     fontSize: 16,
     fontWeight: '400',
     color: colors.offWhite,
-    marginBottom: 19,
-    width: '100%',
+    marginBottom: 16,
+    paddingHorizontal: 42,
   },
   optionsContainer: {
-    width: '100%',
     gap: 16,
-    alignItems: 'center',
+    paddingHorizontal: 42,
+    width: '100%',
   },
   optionButton: {
     backgroundColor: colors.offWhite,
     borderRadius: 10,
-    paddingVertical: 11,
-    paddingHorizontal: 30,
     height: 44,
-    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-    maxWidth: 318,
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+    paddingVertical: 11,
+    width: 318,
+    alignSelf: 'center',
   },
   optionButtonSelected: {
-    backgroundColor: colors.offWhite,
+    backgroundColor: colors.beige,
   },
   optionText: {
     fontFamily: 'Roboto',
