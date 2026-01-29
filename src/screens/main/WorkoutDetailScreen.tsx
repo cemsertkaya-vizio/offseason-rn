@@ -9,6 +9,8 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  Linking,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -18,6 +20,7 @@ import { colors } from '../../constants/colors';
 import { WorkoutExerciseCard } from '../../components/WorkoutExerciseCard';
 import { RootStackParamList } from '../../types/navigation';
 import { useWorkout } from '../../contexts/WorkoutContext';
+import { studioService, Studio } from '../../services/studioService';
 import type { WorkoutExercise } from '../../types/workout';
 
 type WorkoutDetailRouteProp = RouteProp<RootStackParamList, 'WorkoutDetail'>;
@@ -102,6 +105,19 @@ const initialFormData: ExerciseFormData = {
 
 type EditMode = 'add' | 'weight' | 'sets' | 'reps' | null;
 
+type StudioWorkoutType = 'yoga' | 'pilates' | null;
+
+const getStudioWorkoutType = (workoutTitle: string): StudioWorkoutType => {
+  const title = workoutTitle.toLowerCase();
+  if (title.includes('yoga')) {
+    return 'yoga';
+  }
+  if (title.includes('pilates')) {
+    return 'pilates';
+  }
+  return null;
+};
+
 export const WorkoutDetailScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -117,6 +133,10 @@ export const WorkoutDetailScreen: React.FC = () => {
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [formData, setFormData] = useState<ExerciseFormData>(initialFormData);
   const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
+  const [studios, setStudios] = useState<Studio[]>([]);
+  const [isLoadingStudios, setIsLoadingStudios] = useState(false);
+
+  const studioWorkoutType = getStudioWorkoutType(workoutTitle);
 
   const refreshExercises = useCallback(() => {
     const dayWorkout = getDayWorkout(day);
@@ -139,6 +159,30 @@ export const WorkoutDetailScreen: React.FC = () => {
   useEffect(() => {
     refreshExercises();
   }, [refreshExercises]);
+
+  useEffect(() => {
+    const fetchStudios = async () => {
+      if (!studioWorkoutType) {
+        return;
+      }
+      
+      setIsLoadingStudios(true);
+      console.log('WorkoutDetailScreen - Fetching studios for:', studioWorkoutType);
+      
+      const result = await studioService.getStudiosByActivity(studioWorkoutType);
+      
+      if (result.success && result.studios) {
+        setStudios(result.studios);
+        console.log('WorkoutDetailScreen - Loaded studios:', result.studios.length);
+      } else {
+        console.log('WorkoutDetailScreen - Failed to load studios:', result.error);
+      }
+      
+      setIsLoadingStudios(false);
+    };
+
+    fetchStudios();
+  }, [studioWorkoutType]);
 
   const handleBack = () => {
     navigation.goBack();
@@ -350,6 +394,17 @@ export const WorkoutDetailScreen: React.FC = () => {
     return `${exercises.length * 5} MIN`;
   };
 
+  const handleOpenStudioUrl = (url: string | null) => {
+    const studioUrl = url || 'https://www.example.com';
+    const formattedUrl = studioUrl.startsWith('http') ? studioUrl : `https://${studioUrl}`;
+    
+    console.log('WorkoutDetailScreen - Opening studio URL:', formattedUrl);
+    Linking.openURL(formattedUrl).catch((err) => {
+      console.log('WorkoutDetailScreen - Error opening URL:', err);
+      Alert.alert('Error', 'Unable to open the link');
+    });
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -365,13 +420,16 @@ export const WorkoutDetailScreen: React.FC = () => {
           <Text style={styles.title}>{workoutTitle.toUpperCase()}</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAddExercise}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Icon name="add" size={24} color={colors.offWhite} />
-        </TouchableOpacity>
+        {!studioWorkoutType && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={handleAddExercise}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Icon name="add" size={24} color={colors.offWhite} />
+          </TouchableOpacity>
+        )}
+        {studioWorkoutType && <View style={styles.addButton} />}
       </View>
 
       <View style={styles.metaContainer}>
@@ -379,13 +437,20 @@ export const WorkoutDetailScreen: React.FC = () => {
           <Icon2 name="calendar-blank" size={13} color={colors.offWhite} />
           <Text style={styles.metaText}>{formatDate()}</Text>
         </View>
-        <View style={styles.metaItem}>
-          <Icon2 name="clock-outline" size={13} color={colors.offWhite} />
-          <Text style={styles.metaText}>{formatDuration()}</Text>
-        </View>
+        {studioWorkoutType ? (
+          <View style={styles.metaItem}>
+            <Icon name="open-in-new" size={13} color={colors.offWhite} />
+            <Text style={styles.metaText}>REGISTRATION REQUIRED</Text>
+          </View>
+        ) : (
+          <View style={styles.metaItem}>
+            <Icon2 name="clock-outline" size={13} color={colors.offWhite} />
+            <Text style={styles.metaText}>{formatDuration()}</Text>
+          </View>
+        )}
       </View>
 
-      {workoutGoal && (
+      {workoutGoal && !studioWorkoutType && (
         <View style={styles.goalContainer}>
           <Text style={styles.goalLabel}>GOAL</Text>
           <Text style={styles.goalText}>{workoutGoal}</Text>
@@ -397,13 +462,66 @@ export const WorkoutDetailScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {exercises.length === 0 ? (
+        {studioWorkoutType && (
+          <View style={styles.studiosSection}>
+            {isLoadingStudios ? (
+              <ActivityIndicator size="small" color={colors.offWhite} style={styles.studiosLoader} />
+            ) : studios.length > 0 ? (
+              studios.map((studio) => (
+                <TouchableOpacity 
+                  key={studio.id} 
+                  style={styles.studioCard}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.studioImageContainer}>
+                    {studio.image_url ? (
+                      <Image 
+                        source={{ uri: studio.image_url }} 
+                        style={styles.studioImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.studioImagePlaceholder}>
+                        <Icon2 
+                          name={studioWorkoutType === 'yoga' ? 'yoga' : 'human-handsup'} 
+                          size={40} 
+                          color={colors.offWhite} 
+                        />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.studioInfoContainer}>
+                    <View style={styles.studioInfoLeft}>
+                      <Text style={styles.studioName}>{studio.name}</Text>
+                      <View style={styles.studioLocationBadge}>
+                        <Text style={styles.studioLocationText}>San Francisco</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.studioLinkButton}
+                      onPress={() => handleOpenStudioUrl(studio.url)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Icon name="open-in-new" size={13} color={colors.offWhite} />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={styles.noStudiosText}>No studios available in your area</Text>
+            )}
+          </View>
+        )}
+
+        {!studioWorkoutType && exercises.length === 0 && (
           <View style={styles.emptyContainer}>
             <Icon2 name="sleep" size={48} color={colors.offWhite} />
             <Text style={styles.emptyText}>Rest Day</Text>
             <Text style={styles.emptySubtext}>Take time to recover and recharge</Text>
           </View>
-        ) : (
+        )}
+
+        {!studioWorkoutType && exercises.length > 0 && (
           exercises.map((exercise, index) => {
             const getActiveAction = () => {
               if (editingIndex !== index || !isModalVisible) return null;
@@ -822,5 +940,79 @@ const styles = StyleSheet.create({
     fontFamily: 'Bebas Neue',
     fontSize: 18,
     color: colors.darkBrown,
+  },
+  studiosSection: {
+    paddingHorizontal: 38,
+    paddingBottom: 16,
+  },
+  studioCard: {
+    marginBottom: 24,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: colors.offWhite,
+    overflow: 'hidden',
+  },
+  studioImageContainer: {
+    height: 83,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: 'hidden',
+  },
+  studioImage: {
+    width: '100%',
+    height: '100%',
+  },
+  studioImagePlaceholder: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  studioInfoContainer: {
+    backgroundColor: '#1a1a1a',
+    paddingHorizontal: 11,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  studioInfoLeft: {
+    flex: 1,
+  },
+  studioLinkButton: {
+    marginLeft: 12,
+    padding: 4,
+  },
+  studioName: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    marginBottom: 6,
+    textTransform: 'capitalize',
+  },
+  studioLocationBadge: {
+    backgroundColor: colors.beige,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  studioLocationText: {
+    fontFamily: 'Roboto',
+    fontSize: 12,
+    color: colors.darkBrown,
+  },
+  studiosLoader: {
+    marginVertical: 40,
+  },
+  noStudiosText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    opacity: 0.6,
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });

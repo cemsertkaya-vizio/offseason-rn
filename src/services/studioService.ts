@@ -7,6 +7,8 @@ export interface Studio {
   is_active: boolean;
   display_order: number;
   created_at: string;
+  url: string | null;
+  image_url: string | null;
 }
 
 export const studioService = {
