@@ -46,16 +46,8 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.log('WorkoutContext - Season fetched successfully');
         setSeason(result.season);
       } else if (result.error?.includes('No season found')) {
-        console.log('WorkoutContext - No existing season, building new one');
-        const buildResult = await workoutService.buildWorkoutSeason(user.id);
-        
-        if (buildResult.success && buildResult.season) {
-          console.log('WorkoutContext - New season built successfully');
-          setSeason(buildResult.season);
-        } else {
-          console.log('WorkoutContext - Failed to build season:', buildResult.error);
-          setError(buildResult.error || 'Failed to build workout season');
-        }
+        console.log('WorkoutContext - No existing season found, waiting for registration to complete');
+        setSeason(null);
       } else {
         console.log('WorkoutContext - Failed to fetch season:', result.error);
         setError(result.error || 'Failed to fetch season');

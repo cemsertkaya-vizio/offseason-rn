@@ -43,17 +43,18 @@ export const workoutService = {
   },
 
   buildWorkoutSeason: async (
-    userId: string
+    userId: string,
+    overwrite: boolean = false
   ): Promise<{ success: boolean; season?: Season; response?: string; error?: string }> => {
     try {
-      console.log('workoutService - Building new season for user:', userId);
+      console.log('workoutService - Building new season for user:', userId, 'overwrite:', overwrite);
 
       const response = await fetch(`${API_BASE_URL}/build_workout_season`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: userId }),
+        body: JSON.stringify({ user_id: userId, overwrite }),
       });
 
       const data = await response.json();
