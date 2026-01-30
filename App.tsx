@@ -14,6 +14,7 @@ import { AuthProvider } from './src/contexts/AuthContext';
 import { ProfileProvider } from './src/contexts/ProfileContext';
 import { RegistrationProvider } from './src/contexts/RegistrationContext';
 import { WorkoutProvider } from './src/contexts/WorkoutContext';
+import { ChatProvider } from './src/contexts/ChatContext';
 
 function App() {
   return (
@@ -21,12 +22,14 @@ function App() {
       <AuthProvider>
         <ProfileProvider>
           <WorkoutProvider>
-            <RegistrationProvider>
-              <NavigationContainer>
-                <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
-                <RootNavigator />
-              </NavigationContainer>
-            </RegistrationProvider>
+            <ChatProvider>
+              <RegistrationProvider>
+                <NavigationContainer>
+                  <StatusBar barStyle="dark-content" backgroundColor="#8B8B8B" />
+                  <RootNavigator />
+                </NavigationContainer>
+              </RegistrationProvider>
+            </ChatProvider>
           </WorkoutProvider>
         </ProfileProvider>
       </AuthProvider>

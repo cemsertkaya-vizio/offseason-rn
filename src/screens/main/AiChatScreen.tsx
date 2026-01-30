@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,46 +9,73 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Keyboard,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
+import { useChat, Message } from '../../contexts/ChatContext';
+import { chatService } from '../../services/chatService';
 
 const chatSendIcon = require('../../assets/chat/chat-send.png');
 
-interface Message {
-  id: string;
-  text: string;
-  isUser: boolean;
-  isTyping?: boolean;
-}
-
-const initialMessages: Message[] = [
-  {
-    id: '1',
-    text: "I'm here whenever you want to chat about your training!",
-    isUser: false,
-  },
-];
+const TAB_BAR_HEIGHT = 94;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export const AiChatScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { user } = useAuth();
+  const { messages, addMessage, isAiTyping, setIsAiTyping } = useChat();
   const [inputText, setInputText] = useState('');
-  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
-  const handleSend = () => {
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setIsKeyboardVisible(true);
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
+
+  const handleSend = async () => {
     if (!inputText.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      isUser: true,
-    };
+    if (!user?.id) {
+      console.log('AiChatScreen - No user ID available');
+      addMessage({
+        id: Date.now().toString(),
+        text: 'Please sign in to chat with the AI assistant.',
+        isUser: false,
+      });
+      return;
+    }
 
-    setMessages((prev) => [...prev, userMessage]);
+    const messageText = inputText.trim();
+    addMessage({
+      id: Date.now().toString(),
+      text: messageText,
+      isUser: true,
+    });
+
     setInputText('');
     setIsAiTyping(true);
 
@@ -56,18 +83,21 @@ export const AiChatScreen: React.FC = () => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
 
+    const result = await chatService.sendMessage(user.id, messageText);
+
+    setIsAiTyping(false);
+
+    addMessage({
+      id: (Date.now() + 1).toString(),
+      text: result.success && result.response
+        ? result.response
+        : result.error || 'Sorry, something went wrong. Please try again.',
+      isUser: false,
+    });
+
     setTimeout(() => {
-      setIsAiTyping(false);
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "I'll help you adjust your training plan. Let me update your schedule to focus on weightlifting and running sessions.",
-        isUser: false,
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }, 2000);
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   const handleClose = () => {
@@ -108,6 +138,11 @@ export const AiChatScreen: React.FC = () => {
     );
   };
 
+  const bottomMargin = isKeyboardVisible ? 0 : TAB_BAR_HEIGHT + 8;
+  const availableHeight = isKeyboardVisible
+    ? SCREEN_HEIGHT - keyboardHeight - insets.top - 40
+    : 330;
+
   return (
     <View style={styles.overlay}>
       <TouchableOpacity
@@ -120,13 +155,17 @@ export const AiChatScreen: React.FC = () => {
         style={styles.keyboardAvoid}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={[styles.chatContainer, { marginBottom: insets.bottom + 94 }]}>
+        <View style={[
+          styles.chatContainer,
+          { marginBottom: bottomMargin, height: availableHeight }
+        ]}>
           <FlatList
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.messagesList}
+            style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             ListFooterComponent={renderTypingIndicator}
           />
@@ -177,7 +216,6 @@ const styles = StyleSheet.create({
   chatContainer: {
     backgroundColor: colors.offWhite,
     borderRadius: 12,
-    maxHeight: 330,
     shadowColor: colors.offWhite,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
