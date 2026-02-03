@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,10 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
@@ -17,7 +21,16 @@ import { useProfile } from '../../contexts/ProfileContext';
 import { useWorkout } from '../../contexts/WorkoutContext';
 import { profileService } from '../../services/profileService';
 import { workoutService } from '../../services/workoutService';
+import { chatService } from '../../services/chatService';
 import { colors } from '../../constants/colors';
+
+const chatSendIcon = require('../../assets/chat/chat-send.png');
+
+interface ChatMessage {
+  id: string;
+  text: string;
+  isUser: boolean;
+}
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -42,6 +55,10 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isBuildingWorkout, setIsBuildingWorkout] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -172,6 +189,63 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
 
   const summaryText = "Jodie Z is an ex-tennis player now training for a half-marathon in March. She loves running, hiking, yoga, and swimming.";
 
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    if (!user?.id) {
+      console.log('RegisterSummaryReviewScreen - No user ID available for chat');
+      return;
+    }
+
+    const messageText = inputText.trim();
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: messageText,
+      isUser: true,
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+    setInputText('');
+    setIsAiTyping(true);
+
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    const result = await chatService.sendMessage(user.id, messageText);
+
+    setIsAiTyping(false);
+
+    const aiResponse: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      text: result.success && result.response
+        ? result.response
+        : result.error || 'Sorry, something went wrong. Please try again.',
+      isUser: false,
+    };
+
+    setChatMessages((prev) => [...prev, aiResponse]);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+
+  const renderTypingIndicator = () => {
+    if (!isAiTyping) return null;
+    return (
+      <View style={styles.messageRow}>
+        <View style={styles.shadow} />
+        <View style={styles.typingBubble}>
+          <View style={styles.typingDots}>
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -181,11 +255,17 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>SUMMARY REVIEW</Text>
 
@@ -213,6 +293,50 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
             <View style={styles.summaryBox}>
               <Text style={styles.summaryText}>{summaryText}</Text>
               <View style={styles.glowOverlay} />
+            </View>
+          </View>
+
+          {chatMessages.map((message) => (
+            message.isUser ? (
+              <View key={message.id} style={styles.userMessageContainer}>
+                <View style={styles.userBubble}>
+                  <Text style={styles.userMessageText}>{message.text}</Text>
+                </View>
+              </View>
+            ) : (
+              <View key={message.id} style={styles.messageRow}>
+                <View style={styles.shadow} />
+                <View style={[styles.messageBubble, styles.messageBubbleInRow]}>
+                  <Text style={styles.messageText}>{message.text}</Text>
+                </View>
+              </View>
+            )
+          ))}
+
+          {renderTypingIndicator()}
+
+          <View style={styles.chatInputContainer}>
+            <View style={styles.chatInputWrapper}>
+              <TextInput
+                style={styles.chatInput}
+                placeholder="Ask to modify your summary..."
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                value={inputText}
+                onChangeText={setInputText}
+                onSubmitEditing={handleSendMessage}
+                returnKeyType="send"
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={handleSendMessage}
+                disabled={!inputText.trim() || isAiTyping}
+              >
+                <Image
+                  source={chatSendIcon}
+                  style={styles.sendIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -269,7 +393,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
           )}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -452,6 +576,81 @@ const styles = StyleSheet.create({
     color: colors.darkBrown,
     opacity: 0.7,
     marginTop: 2,
+  },
+  userMessageContainer: {
+    alignItems: 'flex-end',
+    marginBottom: 14,
+    width: '100%',
+  },
+  userBubble: {
+    backgroundColor: colors.offWhite,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 0,
+    padding: 14,
+    maxWidth: screenWidth - 120,
+  },
+  userMessageText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    fontWeight: '400',
+    color: colors.darkBrown,
+    lineHeight: 20,
+  },
+  chatInputContainer: {
+    width: '100%',
+    marginBottom: 14,
+    marginLeft: 36,
+  },
+  chatInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.offWhite,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    maxWidth: screenWidth - 120,
+  },
+  chatInput: {
+    flex: 1,
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    paddingVertical: 0,
+  },
+  sendButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  sendIcon: {
+    width: 19,
+    height: 19,
+    tintColor: colors.offWhite,
+  },
+  typingBubble: {
+    backgroundColor: colors.offWhite,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+    borderBottomLeftRadius: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    flex: 1,
+  },
+  typingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.darkBrown,
+    opacity: 0.6,
   },
 });
 
