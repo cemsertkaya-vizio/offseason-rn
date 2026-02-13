@@ -136,8 +136,8 @@ export const RegisterGoalsScreen: React.FC<RegisterGoalsScreenProps> = ({
       console.log('RegisterGoalsScreen - Navigating to first goal screen:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterGoalsScreen - No goals with screens, only simple goals. Navigating to summary');
-      navigation.navigate('RegisterSummaryReview');
+      console.log('RegisterGoalsScreen - No goals with screens, only simple goals. Navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 

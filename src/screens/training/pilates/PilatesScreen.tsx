@@ -132,8 +132,8 @@ export const PilatesScreen: React.FC<PilatesScreenProps> = ({
         console.log('PilatesScreen - Navigating to next activity:', screen);
         navigation.navigate(screen as any);
       } else {
-        console.log('PilatesScreen - All activities complete, navigating to AnythingElse');
-        navigation.navigate('AnythingElse');
+        console.log('PilatesScreen - All activities complete, navigating to RegisterGoals');
+        navigation.navigate('RegisterGoals');
       }
     }
   };

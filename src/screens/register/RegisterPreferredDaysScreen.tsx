@@ -152,8 +152,8 @@ export const RegisterPreferredDaysScreen: React.FC<RegisterPreferredDaysScreenPr
       console.log('RegisterPreferredDaysScreen - Navigating to activity:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterPreferredDaysScreen - No activities with screens, navigating to AnythingElse');
-      navigation.navigate('AnythingElse');
+      console.log('RegisterPreferredDaysScreen - No activities with screens, navigating to RegisterGoals');
+      navigation.navigate('RegisterGoals');
     }
   };
 

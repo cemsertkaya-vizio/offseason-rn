@@ -132,8 +132,8 @@ export const YogaScreen: React.FC<YogaScreenProps> = ({
         console.log('YogaScreen - Navigating to next activity:', screen);
         navigation.navigate(screen as any);
       } else {
-        console.log('YogaScreen - All activities complete, navigating to AnythingElse');
-        navigation.navigate('AnythingElse');
+        console.log('YogaScreen - All activities complete, navigating to RegisterGoals');
+        navigation.navigate('RegisterGoals');
       }
     }
   };

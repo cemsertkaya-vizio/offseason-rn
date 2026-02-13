@@ -145,8 +145,8 @@ export const RegisterGainMuscleDetailsScreen: React.FC<RegisterGainMuscleDetails
       console.log('RegisterGainMuscleDetailsScreen - Navigating to next goal screen:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterGainMuscleDetailsScreen - All goals completed, navigating to summary');
-      navigation.navigate('RegisterSummaryReview');
+      console.log('RegisterGainMuscleDetailsScreen - All goals completed, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 

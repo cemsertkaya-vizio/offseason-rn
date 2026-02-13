@@ -145,8 +145,8 @@ export const RegisterGetStrongerDetailsScreen: React.FC<RegisterGetStrongerDetai
       console.log('RegisterGetStrongerDetailsScreen - Navigating to next goal screen:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterGetStrongerDetailsScreen - All goals completed, navigating to summary');
-      navigation.navigate('RegisterSummaryReview');
+      console.log('RegisterGetStrongerDetailsScreen - All goals completed, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 

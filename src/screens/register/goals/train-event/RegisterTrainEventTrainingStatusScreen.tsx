@@ -154,8 +154,8 @@ export const RegisterTrainEventTrainingStatusScreen: React.FC<RegisterTrainEvent
         console.log('RegisterTrainEventTrainingStatusScreen - Navigating to next goal screen:', screen);
         navigation.navigate(screen as any);
       } else {
-        console.log('RegisterTrainEventTrainingStatusScreen - All goals completed, navigating to summary');
-        navigation.navigate('RegisterSummaryReview');
+        console.log('RegisterTrainEventTrainingStatusScreen - All goals completed, navigating to AnythingElse');
+        navigation.navigate('AnythingElse');
       }
     }
   };

@@ -163,8 +163,8 @@ export const RegisterGetFasterDetailsScreen: React.FC<RegisterGetFasterDetailsSc
       console.log('RegisterGetFasterDetailsScreen - Navigating to next goal screen:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterGetFasterDetailsScreen - All goals completed, navigating to summary');
-      navigation.navigate('RegisterSummaryReview');
+      console.log('RegisterGetFasterDetailsScreen - All goals completed, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 

@@ -130,8 +130,8 @@ export const RunningDistanceScreen: React.FC<RunningDistanceScreenProps> = ({
       console.log('RunningDistanceScreen - Navigating to next activity:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RunningDistanceScreen - All activities complete, navigating to AnythingElse');
-      navigation.navigate('AnythingElse');
+      console.log('RunningDistanceScreen - All activities complete, navigating to RegisterGoals');
+      navigation.navigate('RegisterGoals');
     }
   };
 

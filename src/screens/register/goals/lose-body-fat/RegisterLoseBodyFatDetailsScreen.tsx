@@ -145,8 +145,8 @@ export const RegisterLoseBodyFatDetailsScreen: React.FC<RegisterLoseBodyFatDetai
       console.log('RegisterLoseBodyFatDetailsScreen - Navigating to next goal screen:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterLoseBodyFatDetailsScreen - All goals completed, navigating to summary');
-      navigation.navigate('RegisterSummaryReview');
+      console.log('RegisterLoseBodyFatDetailsScreen - All goals completed, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 

@@ -138,8 +138,8 @@ export const RunningExampleScreen: React.FC<RunningExampleScreenProps> = ({
       console.log('RunningExampleScreen - Navigating to next activity:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RunningExampleScreen - All activities complete, navigating to AnythingElse');
-      navigation.navigate('AnythingElse');
+      console.log('RunningExampleScreen - All activities complete, navigating to RegisterGoals');
+      navigation.navigate('RegisterGoals');
     }
   };
 

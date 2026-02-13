@@ -117,8 +117,8 @@ export const OtherScreen: React.FC<OtherScreenProps> = ({ navigation }) => {
       console.log('OtherScreen - Navigating to next activity:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('OtherScreen - All activities complete, navigating to AnythingElse');
-      navigation.navigate('AnythingElse');
+      console.log('OtherScreen - All activities complete, navigating to RegisterGoals');
+      navigation.navigate('RegisterGoals');
     }
   };
 

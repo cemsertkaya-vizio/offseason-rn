@@ -87,8 +87,8 @@ export const AnythingElseScreen: React.FC<AnythingElseScreenProps> = ({ navigati
     setIsSaving(false);
 
     if (saveResult.success) {
-      console.log('AnythingElseScreen - Progress saved, navigating to RegisterGoals');
-      navigation.navigate('RegisterGoals');
+      console.log('AnythingElseScreen - Progress saved, navigating to RegisterSummaryReview');
+      navigation.navigate('RegisterSummaryReview');
     } else {
       console.log('AnythingElseScreen - Error saving progress:', saveResult.error);
       Alert.alert(

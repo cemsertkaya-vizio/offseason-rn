@@ -125,8 +125,8 @@ export const RegisterPushMyselfScreen: React.FC<RegisterPushMyselfScreenProps> =
       console.log('RegisterPushMyselfScreen - Navigating to next goal screen:', screen);
       navigation.navigate(screen as any);
     } else {
-      console.log('RegisterPushMyselfScreen - All goals completed, navigating to summary');
-      navigation.navigate('RegisterSummaryReview');
+      console.log('RegisterPushMyselfScreen - All goals completed, navigating to AnythingElse');
+      navigation.navigate('AnythingElse');
     }
   };
 
