@@ -58,6 +58,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [profileSummary, setProfileSummary] = useState<string>('');
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -108,6 +109,17 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
         console.log('RegisterSummaryReviewScreen - Error loading profile:', result.error);
       }
 
+      console.log('RegisterSummaryReviewScreen - Fetching profile summary for user:', user.id);
+      const summaryResult = await profileService.getProfileSummary(user.id);
+
+      if (summaryResult.success && summaryResult.summary) {
+        console.log('RegisterSummaryReviewScreen - Profile summary fetched successfully');
+        setProfileSummary(summaryResult.summary);
+      } else {
+        console.log('RegisterSummaryReviewScreen - Error fetching profile summary:', summaryResult.error);
+        setProfileSummary('Unable to load profile summary. Please try again.');
+      }
+
       setIsLoading(false);
     };
 
@@ -117,7 +129,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   const handleApprove = () => {
     setSelectedButton('approve');
     setIsApproved(true);
-    updateRegistrationData({ profileSummary: summaryText });
+    updateRegistrationData({ profileSummary: profileSummary });
   };
 
   const handleGetStarted = async () => {
@@ -187,8 +199,6 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
     }
   };
 
-  const summaryText = "Jodie Z is an ex-tennis player now training for a half-marathon in March. She loves running, hiking, yoga, and swimming.";
-
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -249,6 +259,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.loadingSummaryText}>Creating your summary...</Text>
         <ActivityIndicator size="large" color={colors.offWhite} />
       </View>
     );
@@ -291,7 +302,7 @@ export const RegisterSummaryReviewScreen: React.FC<RegisterSummaryReviewScreenPr
           <View style={styles.messageRow}>
             <View style={styles.shadow} />
             <View style={styles.summaryBox}>
-              <Text style={styles.summaryText}>{summaryText}</Text>
+              <Text style={styles.summaryText}>{profileSummary}</Text>
               <View style={styles.glowOverlay} />
             </View>
           </View>
@@ -405,6 +416,13 @@ const styles = StyleSheet.create({
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingSummaryText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    fontWeight: '400',
+    color: colors.offWhite,
+    marginBottom: 16,
   },
   scrollView: {
     flex: 1,

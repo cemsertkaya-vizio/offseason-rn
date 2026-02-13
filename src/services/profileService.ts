@@ -1,6 +1,8 @@
 import { supabase } from '../config/supabase';
 import type { RegistrationData, ProfileData } from '../types/auth';
 
+const API_BASE_URL = 'https://offseason.onrender.com';
+
 export const profileService = {
   createInitialProfile: async (
     userId: string,
@@ -257,6 +259,36 @@ export const profileService = {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.log('profileService - Exception removing profile image:', errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  getProfileSummary: async (
+    userId: string
+  ): Promise<{ success: boolean; summary?: string; error?: string }> => {
+    try {
+      console.log('profileService - Fetching profile summary for user:', userId);
+
+      const response = await fetch(`${API_BASE_URL}/profile_summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log('profileService - Error fetching profile summary:', data.error || 'Unknown error');
+        return { success: false, error: data.error || 'Failed to fetch profile summary' };
+      }
+
+      console.log('profileService - Profile summary fetched successfully');
+      return { success: true, summary: data.summary };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('profileService - Exception fetching profile summary:', errorMessage);
       return { success: false, error: errorMessage };
     }
   },
