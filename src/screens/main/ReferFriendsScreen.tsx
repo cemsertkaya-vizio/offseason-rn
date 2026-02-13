@@ -60,12 +60,12 @@ export const ReferFriendsScreen: React.FC = () => {
 
       <View style={styles.content}>
         <Text style={styles.thankYouText}>
-          Thanks for sharing us with your friends!
+          Share Offseason with your friends.
         </Text>
         <Text style={styles.descriptionText}>
-          Want in early? Each friend who signs up from your invite moves you
-          higher on the waitlist – the more you share, the sooner you'll unlock
-          early beta access to our next big release.
+          If a friend onboards from your referral, they will jump to the top of
+          our waitlist, and you both will lock in a discounted membership for
+          life. We appreciate you for being early members of Offseason!
         </Text>
       </View>
 
