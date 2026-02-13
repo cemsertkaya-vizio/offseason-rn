@@ -194,35 +194,105 @@ export const workoutService = {
     userId: string,
     dayName1: string,
     dayName2: string,
-    fullSeason: Season
+    fullSeason: Season,
+    weekIndex: number = 0
   ): Promise<{ success: boolean; updatedSeason?: Season; error?: string }> => {
     try {
-      console.log('workoutService - Swapping days:', dayName1, 'and', dayName2);
+      console.log('workoutService - ===== SWAP DAYS START =====');
+      console.log('workoutService - Swapping days:', dayName1, 'and', dayName2, 'in week:', weekIndex);
+      console.log('workoutService - User ID:', userId);
 
-      if (!fullSeason.cycles?.[0]?.weeks?.[0]?.days) {
-        return { success: false, error: 'Invalid season structure' };
+      if (!fullSeason.cycles?.[0]?.weeks?.[weekIndex]?.days) {
+        console.log('workoutService - ERROR: Invalid season structure or week not found');
+        return { success: false, error: 'Invalid season structure or week not found' };
       }
 
       const updatedSeason: Season = JSON.parse(JSON.stringify(fullSeason));
-      const days = updatedSeason.cycles[0].weeks[0].days;
+      const days = updatedSeason.cycles[0].weeks[weekIndex].days;
+      
+      console.log('workoutService - Available days in week:', Object.keys(days));
 
       const day1Workout = days[dayName1];
       const day2Workout = days[dayName2];
 
-      days[dayName1] = day2Workout || { rest_day: true };
-      days[dayName2] = day1Workout || { rest_day: true };
+      console.log('workoutService - Day 1 found:', !!day1Workout);
+      console.log('workoutService - Day 2 found:', !!day2Workout);
 
+      if (!day1Workout || !day2Workout) {
+        console.log('workoutService - ERROR: One or both days not found');
+        return { success: false, error: 'One or both days not found' };
+      }
+
+      console.log('workoutService - BEFORE SWAP:');
+      console.log('workoutService - Day 1 (' + dayName1 + '):', {
+        day_name: day1Workout.day_name,
+        name: day1Workout.name,
+        goal: day1Workout.goal,
+        rest_day: day1Workout.rest_day,
+        exercises_count: day1Workout.exercises?.length || 0
+      });
+      console.log('workoutService - Day 2 (' + dayName2 + '):', {
+        day_name: day2Workout.day_name,
+        name: day2Workout.name,
+        goal: day2Workout.goal,
+        rest_day: day2Workout.rest_day,
+        exercises_count: day2Workout.exercises?.length || 0
+      });
+
+      const day1DayName = day1Workout.day_name;
+      const day2DayName = day2Workout.day_name;
+
+      console.log('workoutService - Preserving day_name values:', day1DayName, day2DayName);
+      console.log('workoutService - Swapping entire day objects...');
+
+      const tempDay = { ...day1Workout };
+      
+      days[dayName1] = { ...day2Workout, day_name: day1DayName };
+      days[dayName2] = { ...tempDay, day_name: day2DayName };
+
+      console.log('workoutService - Swap complete, verifying...');
+      console.log('workoutService - days[' + dayName1 + ']:', {
+        day_name: days[dayName1].day_name,
+        name: days[dayName1].name,
+        rest_day: days[dayName1].rest_day
+      });
+      console.log('workoutService - days[' + dayName2 + ']:', {
+        day_name: days[dayName2].day_name,
+        name: days[dayName2].name,
+        rest_day: days[dayName2].rest_day
+      });
+
+      console.log('workoutService - AFTER SWAP:');
+      console.log('workoutService - Day 1 (' + dayName1 + '):', {
+        day_name: day1Workout.day_name,
+        name: day1Workout.name,
+        goal: day1Workout.goal,
+        rest_day: day1Workout.rest_day,
+        exercises_count: day1Workout.exercises?.length || 0
+      });
+      console.log('workoutService - Day 2 (' + dayName2 + '):', {
+        day_name: day2Workout.day_name,
+        name: day2Workout.name,
+        goal: day2Workout.goal,
+        rest_day: day2Workout.rest_day,
+        exercises_count: day2Workout.exercises?.length || 0
+      });
+
+      console.log('workoutService - Saving updated season to database...');
       const saveResult = await workoutService.saveSeason(userId, updatedSeason);
 
       if (!saveResult.success) {
+        console.log('workoutService - ERROR: Failed to save season:', saveResult.error);
         return { success: false, error: saveResult.error };
       }
 
-      console.log('workoutService - Days swapped successfully');
+      console.log('workoutService - Days swapped and saved successfully');
+      console.log('workoutService - ===== SWAP DAYS END =====');
       return { success: true, updatedSeason };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.log('workoutService - Exception swapping days:', errorMessage);
+      console.log('workoutService - EXCEPTION swapping days:', errorMessage);
+      console.log('workoutService - Exception stack:', error);
       return { success: false, error: errorMessage };
     }
   },

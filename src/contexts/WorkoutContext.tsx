@@ -16,7 +16,7 @@ interface WorkoutContextType {
   removeExercise: (dayName: string, exerciseIndex: number) => Promise<boolean>;
   updateExercise: (dayName: string, exerciseIndex: number, exercise: WorkoutExercise) => Promise<boolean>;
   getDayWorkout: (dayName: string) => DayWorkout | undefined;
-  swapDays: (dayName1: string, dayName2: string) => Promise<boolean>;
+  swapDays: (dayName1: string, dayName2: string, weekIndex?: number) => Promise<boolean>;
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
@@ -214,39 +214,91 @@ export const WorkoutProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return updateExercises(dayName, updatedExercises);
   }, [getDayWorkout, updateExercises]);
 
-  const swapDays = useCallback(async (dayName1: string, dayName2: string): Promise<boolean> => {
+  const swapDays = useCallback(async (dayName1: string, dayName2: string, weekIndex: number = 0): Promise<boolean> => {
+    console.log('WorkoutContext - ===== SWAP DAYS CONTEXT START =====');
+    console.log('WorkoutContext - Request to swap:', dayName1, 'with', dayName2, 'in week:', weekIndex);
+    console.log('WorkoutContext - User ID:', user?.id);
+    console.log('WorkoutContext - Season exists:', !!season);
+    
     if (!user?.id || !season) {
-      console.log('WorkoutContext - Cannot swap days, missing user or season');
+      console.log('WorkoutContext - ERROR: Cannot swap days, missing user or season');
+      console.log('WorkoutContext - User ID present:', !!user?.id);
+      console.log('WorkoutContext - Season present:', !!season);
       return false;
     }
 
     if (dayName1 === dayName2) {
-      console.log('WorkoutContext - Cannot swap day with itself');
+      console.log('WorkoutContext - ERROR: Cannot swap day with itself');
       return false;
     }
 
+    const day1Before = season.cycles?.[0]?.weeks?.[weekIndex]?.days?.[dayName1];
+    const day2Before = season.cycles?.[0]?.weeks?.[weekIndex]?.days?.[dayName2];
+    
+    console.log('WorkoutContext - Day 1 BEFORE swap:', {
+      exists: !!day1Before,
+      day_name: day1Before?.day_name,
+      name: day1Before?.name,
+      rest_day: day1Before?.rest_day,
+      exercises_count: day1Before?.exercises?.length || 0
+    });
+    console.log('WorkoutContext - Day 2 BEFORE swap:', {
+      exists: !!day2Before,
+      day_name: day2Before?.day_name,
+      name: day2Before?.name,
+      rest_day: day2Before?.rest_day,
+      exercises_count: day2Before?.exercises?.length || 0
+    });
+
     setIsSaving(true);
-    console.log('WorkoutContext - Swapping days:', dayName1, 'and', dayName2);
+    console.log('WorkoutContext - Calling workoutService.swapDays...');
 
     try {
-      const result = await workoutService.swapDays(user.id, dayName1, dayName2, season);
+      const result = await workoutService.swapDays(user.id, dayName1, dayName2, season, weekIndex);
+
+      console.log('WorkoutContext - workoutService.swapDays result:', {
+        success: result.success,
+        hasUpdatedSeason: !!result.updatedSeason,
+        error: result.error
+      });
 
       if (result.success && result.updatedSeason) {
-        console.log('WorkoutContext - Days swapped successfully');
+        const day1After = result.updatedSeason.cycles?.[0]?.weeks?.[weekIndex]?.days?.[dayName1];
+        const day2After = result.updatedSeason.cycles?.[0]?.weeks?.[weekIndex]?.days?.[dayName2];
+        
+        console.log('WorkoutContext - Day 1 AFTER swap:', {
+          day_name: day1After?.day_name,
+          name: day1After?.name,
+          rest_day: day1After?.rest_day,
+          exercises_count: day1After?.exercises?.length || 0
+        });
+        console.log('WorkoutContext - Day 2 AFTER swap:', {
+          day_name: day2After?.day_name,
+          name: day2After?.name,
+          rest_day: day2After?.rest_day,
+          exercises_count: day2After?.exercises?.length || 0
+        });
+        
+        console.log('WorkoutContext - Setting updated season in context');
         setSeason(result.updatedSeason);
         setIsSaving(false);
+        console.log('WorkoutContext - Days swapped successfully');
+        console.log('WorkoutContext - ===== SWAP DAYS CONTEXT END (SUCCESS) =====');
         return true;
       } else {
-        console.log('WorkoutContext - Failed to swap days:', result.error);
+        console.log('WorkoutContext - ERROR: Failed to swap days:', result.error);
         setError(result.error || 'Failed to swap days');
         setIsSaving(false);
+        console.log('WorkoutContext - ===== SWAP DAYS CONTEXT END (FAILED) =====');
         return false;
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.log('WorkoutContext - Exception swapping days:', errorMessage);
+      console.log('WorkoutContext - EXCEPTION swapping days:', errorMessage);
+      console.log('WorkoutContext - Exception details:', err);
       setError(errorMessage);
       setIsSaving(false);
+      console.log('WorkoutContext - ===== SWAP DAYS CONTEXT END (EXCEPTION) =====');
       return false;
     }
   }, [user?.id, season]);

@@ -202,25 +202,46 @@ export const WorkoutsScreen: React.FC = () => {
   }, [season, showNextWeek]);
 
   const handleDragEnd = useCallback(async ({ data, from, to }: DragEndParams<DisplayDayWorkout>) => {
+    console.log('WorkoutsScreen - ===== DRAG END =====');
+    console.log('WorkoutsScreen - Drag ended from index:', from, 'to index:', to);
     setIsDragging(false);
     
     if (from === to) {
+      console.log('WorkoutsScreen - No swap needed, same position');
       return;
     }
 
     const fromItem = workouts[from];
     const toItem = workouts[to];
 
-    if (!fromItem || !toItem || fromItem.weekIndex !== toItem.weekIndex || fromItem.weekIndex !== 0) {
+    console.log('WorkoutsScreen - From item:', {
+      day: fromItem?.day,
+      originalDateKey: fromItem?.originalDateKey,
+      weekIndex: fromItem?.weekIndex,
+      isRestDay: fromItem?.isRestDay,
+      workoutTitle: fromItem?.workouts[0]?.title
+    });
+    console.log('WorkoutsScreen - To item:', {
+      day: toItem?.day,
+      originalDateKey: toItem?.originalDateKey,
+      weekIndex: toItem?.weekIndex,
+      isRestDay: toItem?.isRestDay,
+      workoutTitle: toItem?.workouts[0]?.title
+    });
+
+    if (!fromItem || !toItem || fromItem.weekIndex !== toItem.weekIndex) {
+      console.log('WorkoutsScreen - Swap rejected: Items not valid or not in same week');
       return;
     }
 
     const fromDate = fromItem.originalDateKey;
     const toDate = toItem.originalDateKey;
+    const weekIndex = fromItem.weekIndex;
     
     if (fromDate && toDate) {
-      console.log('WorkoutsScreen - Swapping workout content between:', fromDate, 'and', toDate);
-      const success = await swapDays(fromDate, toDate);
+      console.log('WorkoutsScreen - Calling swapDays with:', fromDate, 'and', toDate, 'weekIndex:', weekIndex);
+      const success = await swapDays(fromDate, toDate, weekIndex);
+      console.log('WorkoutsScreen - Swap result:', success);
       
       LayoutAnimation.configureNext({
         duration: 300,
@@ -230,9 +251,15 @@ export const WorkoutsScreen: React.FC = () => {
       });
       
       if (!success) {
+        console.log('WorkoutsScreen - ERROR: Swap failed');
         Alert.alert('Error', 'Failed to swap workouts. Please try again.');
+      } else {
+        console.log('WorkoutsScreen - Swap completed successfully');
       }
+    } else {
+      console.log('WorkoutsScreen - ERROR: Missing fromDate or toDate');
     }
+    console.log('WorkoutsScreen - ===== DRAG END COMPLETE =====');
   }, [workouts, swapDays]);
 
   const handleDragBegin = useCallback(() => {
@@ -273,7 +300,7 @@ export const WorkoutsScreen: React.FC = () => {
       }
     };
 
-    const canDrag = item.weekIndex === 0;
+    const canDrag = true;
 
     return (
       <ScaleDecorator activeScale={1.03}>
@@ -419,6 +446,7 @@ export const WorkoutsScreen: React.FC = () => {
         <GoalsDisplay goals={goals} />
 
         <DraggableFlatList
+          key={`workout-list-${workouts.map(w => `${w.date}-${w.workouts[0]?.title || 'empty'}`).join('-')}`}
           data={workouts}
           onDragEnd={handleDragEnd}
           onDragBegin={handleDragBegin}
