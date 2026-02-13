@@ -31,7 +31,7 @@ import { TimelineIndicator } from '../../components/TimelineIndicator';
 import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useWorkout } from '../../contexts/WorkoutContext';
-import { getCurrentWeekRange } from '../../utils/dateUtils';
+import { getCurrentWeekRange, isDateStringInWeek } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../types/navigation';
 import type { Season, DayWorkout, WorkoutExercise } from '../../types/workout';
 
@@ -46,6 +46,8 @@ interface DisplayWorkout {
 interface DisplayDayWorkout {
   day: string;
   date: string;
+  originalDateKey: string;
+  weekIndex: number;
   isCompleted: boolean;
   workouts: DisplayWorkout[];
   isRestDay: boolean;
@@ -85,33 +87,38 @@ const getWorkoutImage = (workoutName: string): number => {
   return require('../../assets/workouts/workout-outdoor-run.png');
 };
 
-const transformSeasonToDisplayWorkouts = (season: Season): DisplayDayWorkout[] => {
-  if (!season.cycles || season.cycles.length === 0) {
-    return [];
-  }
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-  const firstCycle = season.cycles[0];
-  if (!firstCycle.weeks || firstCycle.weeks.length === 0) {
-    return [];
-  }
-
-  const firstWeek = firstCycle.weeks[0];
-  const days = firstWeek.days;
-
+const transformWeekToDisplayWorkouts = (
+  week: { days: Record<string, DayWorkout> },
+  weekIndex: number,
+  weekOffset: number
+): DisplayDayWorkout[] => {
+  const days = week.days;
   const sortedDateKeys = Object.keys(days).sort();
 
-  return sortedDateKeys.map((dateKey) => {
+  const filteredKeys = sortedDateKeys.filter((dateKey) => {
+    if (ISO_DATE_REGEX.test(dateKey)) {
+      return isDateStringInWeek(dateKey, weekOffset);
+    }
+    return true;
+  });
+
+  return filteredKeys.map((dateKey) => {
     const dayData: DayWorkout = days[dateKey];
     const dayName = dayData.day_name || dateKey;
+    const listKey = `${weekIndex}-${dateKey}`;
 
     if (dayData.rest_day) {
       return {
         day: dayName,
-        date: dateKey,
+        date: listKey,
+        originalDateKey: dateKey,
+        weekIndex,
         isCompleted: false,
         isRestDay: true,
         workouts: [{
-          id: `${dateKey}-rest`,
+          id: `${listKey}-rest`,
           title: 'Rest Day',
           imageSource: require('../../assets/workouts/workout-rest-day.png'),
           exercises: [],
@@ -122,11 +129,13 @@ const transformSeasonToDisplayWorkouts = (season: Season): DisplayDayWorkout[] =
 
     return {
       day: dayName,
-      date: dateKey,
+      date: listKey,
+      originalDateKey: dateKey,
+      weekIndex,
       isCompleted: false,
       isRestDay: false,
       workouts: [{
-        id: `${dateKey}-workout`,
+        id: `${listKey}-workout`,
         title: dayData.name || 'Workout',
         imageSource: getWorkoutImage(dayData.name || ''),
         exercises: dayData.exercises || [],
@@ -134,6 +143,41 @@ const transformSeasonToDisplayWorkouts = (season: Season): DisplayDayWorkout[] =
       }],
     };
   });
+};
+
+const hasDaysInNextWeek = (season: Season): boolean => {
+  if (!season.cycles?.[0]?.weeks?.[0]?.days) {
+    return false;
+  }
+  const dayKeys = Object.keys(season.cycles[0].weeks[0].days);
+  return dayKeys.some((key) => ISO_DATE_REGEX.test(key) && isDateStringInWeek(key, 1));
+};
+
+const transformSeasonToDisplayWorkouts = (
+  season: Season,
+  includeNextWeek: boolean
+): DisplayDayWorkout[] => {
+  if (!season.cycles || season.cycles.length === 0) {
+    return [];
+  }
+
+  const firstCycle = season.cycles[0];
+  if (!firstCycle.weeks || firstCycle.weeks.length === 0) {
+    return [];
+  }
+
+  const currentWeekWorkouts = transformWeekToDisplayWorkouts(firstCycle.weeks[0], 0, 0);
+
+  if (!includeNextWeek) {
+    return currentWeekWorkouts;
+  }
+
+  const nextWeekWorkouts =
+    firstCycle.weeks.length > 1
+      ? transformWeekToDisplayWorkouts(firstCycle.weeks[1], 1, 1)
+      : transformWeekToDisplayWorkouts(firstCycle.weeks[0], 1, 1);
+
+  return [...currentWeekWorkouts, ...nextWeekWorkouts];
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -148,13 +192,14 @@ export const WorkoutsScreen: React.FC = () => {
   const goals = profile?.goals || [];
 
   const [isDragging, setIsDragging] = useState(false);
+  const [showNextWeek, setShowNextWeek] = useState(false);
 
   const workouts = useMemo(() => {
     if (!season) {
       return [];
     }
-    return transformSeasonToDisplayWorkouts(season);
-  }, [season]);
+    return transformSeasonToDisplayWorkouts(season, showNextWeek);
+  }, [season, showNextWeek]);
 
   const handleDragEnd = useCallback(async ({ data, from, to }: DragEndParams<DisplayDayWorkout>) => {
     setIsDragging(false);
@@ -163,8 +208,15 @@ export const WorkoutsScreen: React.FC = () => {
       return;
     }
 
-    const fromDate = workouts[from]?.date;
-    const toDate = workouts[to]?.date;
+    const fromItem = workouts[from];
+    const toItem = workouts[to];
+
+    if (!fromItem || !toItem || fromItem.weekIndex !== toItem.weekIndex || fromItem.weekIndex !== 0) {
+      return;
+    }
+
+    const fromDate = fromItem.originalDateKey;
+    const toDate = toItem.originalDateKey;
     
     if (fromDate && toDate) {
       console.log('WorkoutsScreen - Swapping workout content between:', fromDate, 'and', toDate);
@@ -189,11 +241,14 @@ export const WorkoutsScreen: React.FC = () => {
   }, []);
 
   const handleWorkoutPress = useCallback((workout: DisplayWorkout, dayWorkout: DisplayDayWorkout) => {
+    if (dayWorkout.weekIndex !== 0) {
+      return;
+    }
     console.log('WorkoutsScreen - Workout pressed:', workout.id);
     navigation.navigate('WorkoutDetail', {
       workoutId: workout.id,
       workoutTitle: workout.title,
-      day: dayWorkout.date,
+      day: dayWorkout.originalDateKey,
       date: dayWorkout.day,
       duration: workout.exercises.length * 5,
       exercises: workout.exercises,
@@ -218,10 +273,12 @@ export const WorkoutsScreen: React.FC = () => {
       }
     };
 
+    const canDrag = item.weekIndex === 0;
+
     return (
       <ScaleDecorator activeScale={1.03}>
         <TouchableOpacity
-          onLongPress={drag}
+          onLongPress={canDrag ? drag : undefined}
           onPress={handlePress}
           delayLongPress={150}
           activeOpacity={0.9}
@@ -244,7 +301,7 @@ export const WorkoutsScreen: React.FC = () => {
                   title={item.workouts[0].title}
                   imageSource={item.workouts[0].imageSource}
                   onPress={() => !isActive && handleWorkoutPress(item.workouts[0], item)}
-                  onLongPress={drag}
+                  onLongPress={canDrag ? drag : undefined}
                   position="left"
                   showDay={true}
                   showArrow={false}
@@ -256,7 +313,7 @@ export const WorkoutsScreen: React.FC = () => {
                   title={item.workouts[1].title}
                   imageSource={item.workouts[1].imageSource}
                   onPress={() => !isActive && handleWorkoutPress(item.workouts[1], item)}
-                  onLongPress={drag}
+                  onLongPress={canDrag ? drag : undefined}
                   position="right"
                   showDay={false}
                   showArrow={true}
@@ -270,7 +327,7 @@ export const WorkoutsScreen: React.FC = () => {
                 title={item.workouts[0].title}
                 imageSource={item.workouts[0].imageSource}
                 onPress={handlePress}
-                onLongPress={drag}
+                onLongPress={canDrag ? drag : undefined}
               />
             </View>
           )}
@@ -281,11 +338,35 @@ export const WorkoutsScreen: React.FC = () => {
 
   const keyExtractor = useCallback((item: DisplayDayWorkout) => item.date, []);
 
-  const ListFooterComponent = useCallback(() => (
-    <View style={styles.expandIndicator}>
-      <Icon name="keyboard-arrow-down" size={24} color={colors.offWhite} />
-    </View>
-  ), []);
+  const hasNextWeek = (season?.cycles?.[0]?.weeks?.length ?? 0) > 1 || (season ? hasDaysInNextWeek(season) : false);
+
+  const ListFooterComponent = useCallback(() => {
+    if (!hasNextWeek) {
+      return null;
+    }
+    if (showNextWeek) {
+      return (
+        <TouchableOpacity
+          style={styles.expandIndicator}
+          onPress={() => setShowNextWeek(false)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.expandText}>Show less</Text>
+          <Icon name="keyboard-arrow-up" size={24} color={colors.offWhite} />
+        </TouchableOpacity>
+      );
+    }
+    return (
+      <TouchableOpacity
+        style={styles.expandIndicator}
+        onPress={() => setShowNextWeek(true)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.expandText}>Show next week</Text>
+        <Icon name="keyboard-arrow-down" size={24} color={colors.offWhite} />
+      </TouchableOpacity>
+    );
+  }, [hasNextWeek, showNextWeek]);
 
   if (isLoading) {
     return (
@@ -468,6 +549,13 @@ const styles = StyleSheet.create({
   expandIndicator: {
     alignItems: 'center',
     paddingVertical: 16,
+    gap: 4,
+  },
+  expandText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 16,
+    color: colors.offWhite,
+    textTransform: 'uppercase',
   },
   draggingRow: {
     opacity: 0.95,

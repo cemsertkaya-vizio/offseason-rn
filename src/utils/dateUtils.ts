@@ -32,6 +32,64 @@ export const getCurrentWeekRange = (): string => {
   return `${monthName} ${startDay} - ${endMonthName} ${endDay}`;
 };
 
+export const getWeekRangeForOffset = (offset: number): string => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysFromMonday + offset * 7);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const monthName = MONTH_NAMES[monday.getMonth()];
+  const startDay = monday.getDate();
+  const endDay = sunday.getDate();
+
+  if (monday.getMonth() === sunday.getMonth()) {
+    return `${monthName} ${startDay} - ${endDay}`;
+  }
+
+  const endMonthName = MONTH_NAMES[sunday.getMonth()];
+  return `${monthName} ${startDay} - ${endMonthName} ${endDay}`;
+};
+
+export const getCurrentWeekDateRange = (): { monday: Date; sunday: Date } => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysFromMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return { monday, sunday };
+};
+
+export const getWeekDateRangeForOffset = (offset: number): { monday: Date; sunday: Date } => {
+  const { monday } = getCurrentWeekDateRange();
+  const weekMonday = new Date(monday);
+  weekMonday.setDate(monday.getDate() + offset * 7);
+  const weekSunday = new Date(weekMonday);
+  weekSunday.setDate(weekMonday.getDate() + 6);
+  weekSunday.setHours(23, 59, 59, 999);
+  return { monday: weekMonday, sunday: weekSunday };
+};
+
+export const isDateStringInWeek = (dateKey: string, weekOffset: number): boolean => {
+  const parsed = new Date(dateKey + 'T12:00:00');
+  if (isNaN(parsed.getTime())) {
+    return false;
+  }
+  const { monday, sunday } = getWeekDateRangeForOffset(weekOffset);
+  return parsed >= monday && parsed <= sunday;
+};
+
 export const getMonthsUntilDate = (month: string, year: number): number => {
   const today = new Date();
   const currentYear = today.getFullYear();
