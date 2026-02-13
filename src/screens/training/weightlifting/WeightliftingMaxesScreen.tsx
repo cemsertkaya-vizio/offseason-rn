@@ -188,7 +188,7 @@ export const WeightliftingMaxesScreen: React.FC<WeightliftingMaxesScreenProps> =
 
           <View style={styles.liftRow}>
             <Text style={styles.liftQuestion}>
-              How heavy can you bench press?
+              How heavy can you bench press (one rep max)?
             </Text>
             <WeightPicker
               value={maxes.bench}
@@ -201,7 +201,7 @@ export const WeightliftingMaxesScreen: React.FC<WeightliftingMaxesScreenProps> =
 
           <View style={styles.liftRow}>
             <Text style={styles.liftQuestion}>
-              How heavy can you deadlift?
+              How heavy can you deadlift (one rep max)?
             </Text>
             <WeightPicker
               value={maxes.deadlift}
