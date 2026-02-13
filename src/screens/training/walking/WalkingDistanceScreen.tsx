@@ -114,7 +114,7 @@ export const WalkingDistanceScreen: React.FC<WalkingDistanceScreenProps> = ({
 
     console.log('WalkingDistanceScreen - Progress saved, marking activity as completed');
 
-    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Walking');
+    const marked = await activityNavigationService.markActivityCompleted(user.id, 'Walking/Hiking');
 
     if (!marked) {
       setIsSaving(false);
@@ -122,7 +122,7 @@ export const WalkingDistanceScreen: React.FC<WalkingDistanceScreenProps> = ({
       return;
     }
 
-    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Walking');
+    const { screen } = await activityNavigationService.getNextActivityScreen(user.id, 'Walking/Hiking');
 
     setIsSaving(false);
 
