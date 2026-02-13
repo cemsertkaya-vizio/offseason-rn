@@ -379,12 +379,17 @@ export const WorkoutDetailScreen: React.FC = () => {
   };
 
   const formatDate = () => {
-    if (date) {
-      return date;
-    }
-    const now = new Date();
     const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return `${day}, ${monthNames[now.getMonth()]} ${now.getDate()}`;
+    const dayName = date || '';
+
+    const parsed = new Date(day + 'T00:00:00');
+    if (!isNaN(parsed.getTime())) {
+      const monthStr = monthNames[parsed.getMonth()];
+      const dayNum = parsed.getDate();
+      return dayName ? `${dayName}, ${monthStr} ${dayNum}` : `${monthStr} ${dayNum}`;
+    }
+
+    return dayName || day;
   };
 
   const formatDuration = () => {

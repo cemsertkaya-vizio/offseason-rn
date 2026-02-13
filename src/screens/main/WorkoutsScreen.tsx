@@ -45,12 +45,11 @@ interface DisplayWorkout {
 
 interface DisplayDayWorkout {
   day: string;
+  date: string;
   isCompleted: boolean;
   workouts: DisplayWorkout[];
   isRestDay: boolean;
 }
-
-const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const getWorkoutImage = (workoutName: string): number => {
   const name = workoutName.toLowerCase();
@@ -86,7 +85,7 @@ const getWorkoutImage = (workoutName: string): number => {
   return require('../../assets/workouts/workout-outdoor-run.png');
 };
 
-const transformSeasonToDisplayWorkouts = (season: Season, dayOrder: string[]): DisplayDayWorkout[] => {
+const transformSeasonToDisplayWorkouts = (season: Season): DisplayDayWorkout[] => {
   if (!season.cycles || season.cycles.length === 0) {
     return [];
   }
@@ -99,16 +98,20 @@ const transformSeasonToDisplayWorkouts = (season: Season, dayOrder: string[]): D
   const firstWeek = firstCycle.weeks[0];
   const days = firstWeek.days;
 
-  return dayOrder.map((dayName, index) => {
-    const dayData: DayWorkout | undefined = days[dayName];
+  const sortedDateKeys = Object.keys(days).sort();
 
-    if (!dayData || dayData.rest_day) {
+  return sortedDateKeys.map((dateKey) => {
+    const dayData: DayWorkout = days[dateKey];
+    const dayName = dayData.day_name || dateKey;
+
+    if (dayData.rest_day) {
       return {
         day: dayName,
+        date: dateKey,
         isCompleted: false,
         isRestDay: true,
         workouts: [{
-          id: `${dayName}-rest`,
+          id: `${dateKey}-rest`,
           title: 'Rest Day',
           imageSource: require('../../assets/workouts/workout-rest-day.png'),
           exercises: [],
@@ -119,10 +122,11 @@ const transformSeasonToDisplayWorkouts = (season: Season, dayOrder: string[]): D
 
     return {
       day: dayName,
+      date: dateKey,
       isCompleted: false,
       isRestDay: false,
       workouts: [{
-        id: `${dayName}-${index}`,
+        id: `${dateKey}-workout`,
         title: dayData.name || 'Workout',
         imageSource: getWorkoutImage(dayData.name || ''),
         exercises: dayData.exercises || [],
@@ -144,14 +148,13 @@ export const WorkoutsScreen: React.FC = () => {
   const goals = profile?.goals || [];
 
   const [isDragging, setIsDragging] = useState(false);
-  const [dayOrder, setDayOrder] = useState<string[]>(DAY_ORDER);
 
   const workouts = useMemo(() => {
     if (!season) {
       return [];
     }
-    return transformSeasonToDisplayWorkouts(season, dayOrder);
-  }, [season, dayOrder]);
+    return transformSeasonToDisplayWorkouts(season);
+  }, [season]);
 
   const handleDragEnd = useCallback(async ({ data, from, to }: DragEndParams<DisplayDayWorkout>) => {
     setIsDragging(false);
@@ -160,15 +163,12 @@ export const WorkoutsScreen: React.FC = () => {
       return;
     }
 
-    const fromDay = dayOrder[from];
-    const toDay = dayOrder[to];
+    const fromDate = workouts[from]?.date;
+    const toDate = workouts[to]?.date;
     
-    const newDayOrder = data.map(item => item.day);
-    setDayOrder(newDayOrder);
-    
-    if (fromDay && toDay) {
-      console.log('WorkoutsScreen - Swapping workout content between:', fromDay, 'and', toDay);
-      const success = await swapDays(fromDay, toDay);
+    if (fromDate && toDate) {
+      console.log('WorkoutsScreen - Swapping workout content between:', fromDate, 'and', toDate);
+      const success = await swapDays(fromDate, toDate);
       
       LayoutAnimation.configureNext({
         duration: 300,
@@ -177,14 +177,11 @@ export const WorkoutsScreen: React.FC = () => {
         delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
       });
       
-      if (success) {
-        setDayOrder(DAY_ORDER);
-      } else {
+      if (!success) {
         Alert.alert('Error', 'Failed to swap workouts. Please try again.');
-        setDayOrder(DAY_ORDER);
       }
     }
-  }, [dayOrder, swapDays]);
+  }, [workouts, swapDays]);
 
   const handleDragBegin = useCallback(() => {
     setIsDragging(true);
@@ -196,7 +193,8 @@ export const WorkoutsScreen: React.FC = () => {
     navigation.navigate('WorkoutDetail', {
       workoutId: workout.id,
       workoutTitle: workout.title,
-      day: dayWorkout.day,
+      day: dayWorkout.date,
+      date: dayWorkout.day,
       duration: workout.exercises.length * 5,
       exercises: workout.exercises,
       workoutGoal: workout.goal,
@@ -281,7 +279,7 @@ export const WorkoutsScreen: React.FC = () => {
     );
   }, [workouts, handleWorkoutPress]);
 
-  const keyExtractor = useCallback((item: DisplayDayWorkout) => item.day, []);
+  const keyExtractor = useCallback((item: DisplayDayWorkout) => item.date, []);
 
   const ListFooterComponent = useCallback(() => (
     <View style={styles.expandIndicator}>

@@ -7,6 +7,7 @@ export interface WorkoutExercise {
 }
 
 export interface DayWorkout {
+  day_name?: string;
   name?: string;
   goal?: string;
   priorities?: string[];
