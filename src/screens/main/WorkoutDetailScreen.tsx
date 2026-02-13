@@ -399,6 +399,9 @@ export const WorkoutDetailScreen: React.FC = () => {
     return `${exercises.length * 5} MIN`;
   };
 
+  const dayWorkout = getDayWorkout(day);
+  const isRestDay = dayWorkout?.rest_day === true;
+
   const handleOpenStudioUrl = (url: string | null) => {
     const studioUrl = url || 'https://www.example.com';
     const formattedUrl = studioUrl.startsWith('http') ? studioUrl : `https://${studioUrl}`;
@@ -518,11 +521,35 @@ export const WorkoutDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {!studioWorkoutType && exercises.length === 0 && (
+        {!studioWorkoutType && isRestDay && exercises.length === 0 && (
           <View style={styles.emptyContainer}>
             <Icon2 name="sleep" size={48} color={colors.offWhite} />
             <Text style={styles.emptyText}>Rest Day</Text>
             <Text style={styles.emptySubtext}>Take time to recover and recharge</Text>
+          </View>
+        )}
+
+        {!studioWorkoutType && !isRestDay && exercises.length === 0 && (
+          <View style={styles.emptyWorkoutContainer}>
+            {dayWorkout?.priorities && dayWorkout.priorities.length > 0 && (
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>PRIORITIES</Text>
+                <Text style={styles.detailText}>
+                  {dayWorkout.priorities.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}
+                </Text>
+              </View>
+            )}
+            {dayWorkout?.reason && (
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>REASON</Text>
+                <Text style={styles.detailText}>{dayWorkout.reason}</Text>
+              </View>
+            )}
+            <View style={styles.emptyExercisesContainer}>
+              <Icon2 name="dumbbell" size={40} color={colors.offWhite} />
+              <Text style={styles.emptyExercisesText}>No exercises in this workout yet</Text>
+              <Text style={styles.emptyExercisesSubtext}>Use the add button to customize</Text>
+            </View>
           </View>
         )}
 
@@ -788,6 +815,44 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   emptySubtext: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    opacity: 0.7,
+    marginTop: 8,
+  },
+  emptyWorkoutContainer: {
+    paddingHorizontal: 35,
+    paddingTop: 16,
+  },
+  detailSection: {
+    marginBottom: 16,
+  },
+  detailLabel: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 12,
+    color: colors.yellow,
+    lineHeight: 16,
+    textTransform: 'uppercase',
+  },
+  detailText: {
+    fontFamily: 'Roboto',
+    fontSize: 14,
+    color: colors.offWhite,
+    lineHeight: 20,
+    marginTop: 2,
+  },
+  emptyExercisesContainer: {
+    alignItems: 'center',
+    paddingTop: 48,
+  },
+  emptyExercisesText: {
+    fontFamily: 'Bebas Neue',
+    fontSize: 18,
+    color: colors.offWhite,
+    marginTop: 16,
+  },
+  emptyExercisesSubtext: {
     fontFamily: 'Roboto',
     fontSize: 14,
     color: colors.offWhite,
