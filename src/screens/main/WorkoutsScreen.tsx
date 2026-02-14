@@ -175,7 +175,7 @@ const transformSeasonToDisplayWorkouts = (
   const nextWeekWorkouts =
     firstCycle.weeks.length > 1
       ? transformWeekToDisplayWorkouts(firstCycle.weeks[1], 1, 1)
-      : transformWeekToDisplayWorkouts(firstCycle.weeks[0], 1, 1);
+      : transformWeekToDisplayWorkouts(firstCycle.weeks[0], 0, 1);
 
   return [...currentWeekWorkouts, ...nextWeekWorkouts];
 };
@@ -229,8 +229,8 @@ export const WorkoutsScreen: React.FC = () => {
       workoutTitle: toItem?.workouts[0]?.title
     });
 
-    if (!fromItem || !toItem || fromItem.weekIndex !== toItem.weekIndex) {
-      console.log('WorkoutsScreen - Swap rejected: Items not valid or not in same week');
+    if (!fromItem || !toItem) {
+      console.log('WorkoutsScreen - Swap rejected: Items not valid');
       return;
     }
 
