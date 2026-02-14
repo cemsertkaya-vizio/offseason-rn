@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   Image,
   ImageSourcePropType,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Video from 'react-native-video';
 import { colors } from '../constants/colors';
-
-const workoutSampleVideo = require('../assets/workout-sample.mp4');
 
 const editWeightIcon = require('../assets/workouts/workout-edit/ion_barbell-outline.png');
 const editSetsIcon = require('../assets/workouts/workout-edit/basil_stack-outline.png');
@@ -28,6 +27,7 @@ type ActionType = 'weight' | 'sets' | 'reps' | 'complete' | 'delete' | null;
 interface WorkoutExerciseCardProps {
   title: string;
   imageSource: ImageSourcePropType;
+  videoSource?: { uri: string } | null;
   tags?: Tag[];
   isCompleted?: boolean;
   isExpanded?: boolean;
@@ -46,6 +46,7 @@ interface WorkoutExerciseCardProps {
 export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
   title,
   imageSource,
+  videoSource = null,
   tags = [],
   isCompleted = false,
   isExpanded = false,
@@ -60,6 +61,20 @@ export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
   onToggleComplete,
   onDelete,
 }) => {
+  const hasVideo = videoSource !== null;
+  const isRemoteImage = typeof imageSource === 'object' && imageSource !== null && 'uri' in imageSource;
+  const [imageLoaded, setImageLoaded] = useState(!isRemoteImage);
+
+  useEffect(() => {
+    if (isRemoteImage) {
+      setImageLoaded(false);
+    } else {
+      setImageLoaded(true);
+    }
+  }, [imageSource, isRemoteImage]);
+
+  const handleImageLoad = () => setImageLoaded(true);
+
   if (isExpanded) {
     return (
       <View style={styles.expandedContainer}>
@@ -99,33 +114,48 @@ export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
         </TouchableOpacity>
 
         <View style={styles.expandedImageContainer}>
-          {isVideoPlaying ? (
-            <TouchableOpacity 
+          {hasVideo && videoSource && (
+            <TouchableOpacity
               style={styles.videoTouchable}
               onPress={onPlayPress}
               activeOpacity={1}
             >
               <Video
-                source={workoutSampleVideo}
+                source={videoSource}
                 style={styles.expandedVideo}
                 resizeMode="cover"
                 repeat={false}
+                paused={!isVideoPlaying}
                 controls={false}
                 onEnd={onPlayPress}
+                onError={(e) => console.log('WorkoutExerciseCard - Video error:', e)}
               />
             </TouchableOpacity>
-          ) : (
+          )}
+          {(!hasVideo || !isVideoPlaying) && (
             <>
-              <Image source={imageSource} style={styles.expandedImage} resizeMode="cover" />
-              <TouchableOpacity 
-                style={styles.playButtonOverlay}
-                onPress={onPlayPress}
-                activeOpacity={0.8}
-              >
-                <View style={styles.playButton}>
-                  <Icon name="play-arrow" size={32} color={colors.offWhite} />
+              <Image
+                source={imageSource}
+                style={[styles.expandedImage, styles.expandedImageOverlay]}
+                resizeMode="cover"
+                onLoad={handleImageLoad}
+              />
+              {!imageLoaded && (
+                <View style={[styles.imageLoaderOverlay, styles.expandedImageOverlay]}>
+                  <ActivityIndicator size="small" color={colors.offWhite} />
                 </View>
-              </TouchableOpacity>
+              )}
+              {hasVideo && (
+                <TouchableOpacity
+                  style={styles.playButtonOverlay}
+                  onPress={onPlayPress}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.playButton}>
+                    <Icon name="play-arrow" size={32} color={colors.offWhite} />
+                  </View>
+                </TouchableOpacity>
+              )}
             </>
           )}
         </View>
@@ -208,7 +238,17 @@ export const WorkoutExerciseCard: React.FC<WorkoutExerciseCardProps> = ({
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>
-        <Image source={imageSource} style={styles.image} resizeMode="cover" />
+        <Image
+          source={imageSource}
+          style={styles.image}
+          resizeMode="cover"
+          onLoad={handleImageLoad}
+        />
+        {!imageLoaded && (
+          <View style={styles.imageLoaderOverlay}>
+            <ActivityIndicator size="small" color={colors.offWhite} />
+          </View>
+        )}
       </View>
 
       <View style={styles.contentContainer}>
@@ -353,6 +393,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  expandedImageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   expandedVideo: {
     width: '100%',
     height: '100%',
@@ -362,6 +409,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  imageLoaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   videoTouchable: {
     width: '100%',

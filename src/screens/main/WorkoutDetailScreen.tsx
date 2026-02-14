@@ -21,14 +21,17 @@ import { WorkoutExerciseCard } from '../../components/WorkoutExerciseCard';
 import { RootStackParamList } from '../../types/navigation';
 import { useWorkout } from '../../contexts/WorkoutContext';
 import { studioService, Studio } from '../../services/studioService';
+import { exerciseMediaService, ExerciseMedia } from '../../services/exerciseMediaService';
 import type { WorkoutExercise } from '../../types/workout';
+import type { ImageSourcePropType } from 'react-native';
 
 type WorkoutDetailRouteProp = RouteProp<RootStackParamList, 'WorkoutDetail'>;
 
 interface DisplayExercise {
   id: string;
   title: string;
-  imageSource: number;
+  imageSource: ImageSourcePropType;
+  videoSource: { uri: string } | null;
   tags: { label: string }[];
   isCompleted: boolean;
   instructions: string[];
@@ -135,6 +138,8 @@ export const WorkoutDetailScreen: React.FC = () => {
   const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
   const [studios, setStudios] = useState<Studio[]>([]);
   const [isLoadingStudios, setIsLoadingStudios] = useState(false);
+  const [exerciseMedia, setExerciseMedia] = useState<ExerciseMedia[]>([]);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(true);
 
   const studioWorkoutType = getStudioWorkoutType(workoutTitle);
 
@@ -142,23 +147,51 @@ export const WorkoutDetailScreen: React.FC = () => {
     const dayWorkout = getDayWorkout(day);
     const currentExercises = dayWorkout?.exercises || apiExercises || [];
     
-    const transformedExercises: DisplayExercise[] = currentExercises.map((exercise, index) => ({
-      id: `${index}-${exercise.name}`,
-      title: exercise.name,
-      imageSource: getExerciseImage(exercise.name),
-      tags: formatExerciseTags(exercise.sets, exercise.reps, exercise.weight),
-      isCompleted: exercise.completed || false,
-      instructions: [],
-      sets: exercise.sets,
-      reps: exercise.reps,
-      weight: exercise.weight,
-    }));
+    const transformedExercises: DisplayExercise[] = currentExercises.map((exercise, index) => {
+      const media = exerciseMediaService.getMediaForExercise(exercise.name, exerciseMedia);
+
+      const imageSource: ImageSourcePropType = media?.image_filename
+        ? { uri: exerciseMediaService.getImageUrl(media.image_filename) }
+        : getExerciseImage(exercise.name);
+
+      const videoSource = media?.video_filename
+        ? { uri: exerciseMediaService.getVideoUrl(media.video_filename) }
+        : null;
+
+      return {
+        id: `${index}-${exercise.name}`,
+        title: exercise.name,
+        imageSource,
+        videoSource,
+        tags: formatExerciseTags(exercise.sets, exercise.reps, exercise.weight),
+        isCompleted: exercise.completed || false,
+        instructions: [],
+        sets: exercise.sets,
+        reps: exercise.reps,
+        weight: exercise.weight,
+      };
+    });
     setExercises(transformedExercises);
-  }, [day, getDayWorkout, apiExercises]);
+  }, [day, getDayWorkout, apiExercises, exerciseMedia]);
 
   useEffect(() => {
     refreshExercises();
   }, [refreshExercises]);
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      setIsLoadingMedia(true);
+      const result = await exerciseMediaService.fetchAllExerciseMedia();
+      if (result.success && result.data) {
+        setExerciseMedia(result.data);
+      } else {
+        console.log('WorkoutDetailScreen - Failed to load exercise media:', result.error);
+      }
+      setIsLoadingMedia(false);
+    };
+
+    fetchMedia();
+  }, []);
 
   useEffect(() => {
     const fetchStudios = async () => {
@@ -553,7 +586,13 @@ export const WorkoutDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {!studioWorkoutType && exercises.length > 0 && (
+        {!studioWorkoutType && exercises.length > 0 && isLoadingMedia && (
+          <View style={styles.exercisesLoaderContainer}>
+            <ActivityIndicator size="large" color={colors.offWhite} />
+          </View>
+        )}
+
+        {!studioWorkoutType && exercises.length > 0 && !isLoadingMedia && (
           exercises.map((exercise, index) => {
             const getActiveAction = () => {
               if (editingIndex !== index || !isModalVisible) return null;
@@ -568,6 +607,7 @@ export const WorkoutDetailScreen: React.FC = () => {
                 key={exercise.id}
                 title={exercise.title}
                 imageSource={exercise.imageSource}
+                videoSource={exercise.videoSource}
                 tags={exercise.tags}
                 isCompleted={exercise.isCompleted}
                 isExpanded={expandedIndex === index}
@@ -1076,6 +1116,12 @@ const styles = StyleSheet.create({
   },
   studiosLoader: {
     marginVertical: 40,
+  },
+  exercisesLoaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
   },
   noStudiosText: {
     fontFamily: 'Roboto',
