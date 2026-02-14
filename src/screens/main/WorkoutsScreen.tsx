@@ -31,7 +31,7 @@ import { TimelineIndicator } from '../../components/TimelineIndicator';
 import { GoalsDisplay } from '../../components/GoalsDisplay';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useWorkout } from '../../contexts/WorkoutContext';
-import { getCurrentWeekRange, isDateStringInWeek } from '../../utils/dateUtils';
+import { getCurrentWeekRange, isDateStringInWeek, isDateOnOrAfterToday } from '../../utils/dateUtils';
 import { RootStackParamList } from '../../types/navigation';
 import type { Season, DayWorkout, WorkoutExercise } from '../../types/workout';
 
@@ -99,7 +99,7 @@ const transformWeekToDisplayWorkouts = (
 
   const filteredKeys = sortedDateKeys.filter((dateKey) => {
     if (ISO_DATE_REGEX.test(dateKey)) {
-      return isDateStringInWeek(dateKey, weekOffset);
+      return isDateStringInWeek(dateKey, weekOffset) && isDateOnOrAfterToday(dateKey);
     }
     return true;
   });

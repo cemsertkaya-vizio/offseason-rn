@@ -81,6 +81,17 @@ export const getWeekDateRangeForOffset = (offset: number): { monday: Date; sunda
   return { monday: weekMonday, sunday: weekSunday };
 };
 
+export const isDateOnOrAfterToday = (isoDateKey: string): boolean => {
+  const parts = isoDateKey.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return false;
+  const [year, month, day] = parts;
+  const date = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  return date >= today;
+};
+
 export const isDateStringInWeek = (dateKey: string, weekOffset: number): boolean => {
   const parsed = new Date(dateKey + 'T12:00:00');
   if (isNaN(parsed.getTime())) {
