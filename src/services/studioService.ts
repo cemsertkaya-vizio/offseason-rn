@@ -9,6 +9,10 @@ export interface Studio {
   created_at: string;
   url: string | null;
   image_url: string | null;
+  logo_url?: string | null;
+  city?: string | null;
+  address?: string | null;
+  location_pill?: string | null;
 }
 
 export const studioService = {
