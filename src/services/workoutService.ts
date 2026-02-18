@@ -4,10 +4,33 @@ import type {
   WorkoutApiError,
   Season,
   DayWorkout,
+  WorkoutExercise,
 } from '../types/workout';
 import { supabase } from '../config/supabase';
 
 const API_BASE_URL = 'https://offseason.onrender.com';
+
+const normalizeExercise = (ex: WorkoutExercise & { name?: string }): WorkoutExercise => ({
+  exercise: ex.exercise ?? ex.name ?? '',
+  sets: ex.sets,
+  reps: ex.reps,
+  weight: ex.weight,
+  completed: ex.completed,
+});
+
+const normalizeSeasonExercises = (season: Season): Season => {
+  const normalized = JSON.parse(JSON.stringify(season)) as Season;
+  normalized.cycles?.forEach((cycle) =>
+    cycle.weeks?.forEach((week) =>
+      Object.values(week.days || {}).forEach((day) => {
+        if (day?.exercises) {
+          day.exercises = day.exercises.map(normalizeExercise);
+        }
+      })
+    )
+  );
+  return normalized;
+};
 
 export const workoutService = {
   loadExistingSeason: async (
@@ -34,7 +57,10 @@ export const workoutService = {
 
       const seasonData = data as LoadSeasonResponse;
       console.log('workoutService - Season loaded successfully');
-      return { success: true, season: seasonData.season };
+      return {
+        success: true,
+        season: seasonData.season ? normalizeSeasonExercises(seasonData.season) : undefined,
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.log('workoutService - Exception loading season:', errorMessage);
@@ -69,7 +95,7 @@ export const workoutService = {
       console.log('workoutService - Season built successfully');
       return {
         success: true,
-        season: buildData.season,
+        season: buildData.season ? normalizeSeasonExercises(buildData.season) : undefined,
         response: buildData.response,
       };
     } catch (error) {

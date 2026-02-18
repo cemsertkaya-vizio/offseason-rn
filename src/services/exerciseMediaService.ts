@@ -56,12 +56,15 @@ export const exerciseMediaService = {
   },
 
   getMediaForExercise: (
-    exerciseName: string,
+    exercise: string,
     allMedia: ExerciseMedia[]
   ): ExerciseMedia | undefined => {
-    const normalizedName = exerciseName.trim().toLowerCase();
+    if (!exercise || !allMedia?.length) {
+      return undefined;
+    }
+    const normalizedName = exercise.trim().toLowerCase();
     return allMedia.find(
-      (media) => media.exercise_name.trim().toLowerCase() === normalizedName
+      (media) => media.exercise_name?.trim().toLowerCase() === normalizedName
     );
   },
 };

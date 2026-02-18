@@ -40,8 +40,11 @@ interface DisplayExercise {
   weight: number;
 }
 
-const getExerciseImage = (exerciseName: string): number => {
-  const name = exerciseName.toLowerCase();
+const getExerciseImage = (exercise: string): number => {
+  if (!exercise || typeof exercise !== 'string') {
+    return require('../../assets/workouts/workout-outdoor-run.png');
+  }
+  const name = exercise.toLowerCase();
   
   if (name.includes('squat') || name.includes('lunge') || name.includes('leg')) {
     return require('../../assets/workouts/workout-lower-body.png');
@@ -93,14 +96,14 @@ const formatExerciseTags = (
 };
 
 interface ExerciseFormData {
-  name: string;
+  exercise: string;
   sets: string;
   reps: string;
   weight: string;
 }
 
 const initialFormData: ExerciseFormData = {
-  name: '',
+  exercise: '',
   sets: '3',
   reps: '10',
   weight: '0',
@@ -148,19 +151,19 @@ export const WorkoutDetailScreen: React.FC = () => {
     const currentExercises = dayWorkout?.exercises || apiExercises || [];
     
     const transformedExercises: DisplayExercise[] = currentExercises.map((exercise, index) => {
-      const media = exerciseMediaService.getMediaForExercise(exercise.name, exerciseMedia);
+      const media = exerciseMediaService.getMediaForExercise(exercise.exercise, exerciseMedia);
 
       const imageSource: ImageSourcePropType = media?.image_filename
         ? { uri: exerciseMediaService.getImageUrl(media.image_filename) }
-        : getExerciseImage(exercise.name);
+        : getExerciseImage(exercise.exercise);
 
       const videoSource = media?.video_filename
         ? { uri: exerciseMediaService.getVideoUrl(media.video_filename) }
         : null;
 
       return {
-        id: `${index}-${exercise.name}`,
-        title: exercise.name,
+        id: `${index}-${exercise.exercise}`,
+        title: exercise.exercise,
         imageSource,
         videoSource,
         tags: formatExerciseTags(exercise.sets, exercise.reps, exercise.weight),
@@ -344,13 +347,13 @@ export const WorkoutDetailScreen: React.FC = () => {
     console.log('WorkoutDetailScreen - handleSaveExercise, day:', day, 'dayWorkout exists:', !!dayWorkout);
     
     if (editMode === 'add') {
-      if (!formData.name.trim()) {
+      if (!formData.exercise.trim()) {
         Alert.alert('Error', 'Please enter an exercise name');
         return;
       }
 
       const exerciseData: WorkoutExercise = {
-        name: formData.name.trim(),
+        exercise: formData.exercise.trim(),
         sets: parseInt(formData.sets, 10) || 1,
         reps: parseInt(formData.reps, 10) || 1,
         weight: parseInt(formData.weight, 10) || 0,
@@ -647,8 +650,8 @@ export const WorkoutDetailScreen: React.FC = () => {
                 <Text style={styles.formLabel}>EXERCISE NAME</Text>
                 <TextInput
                   style={styles.formInput}
-                  value={formData.name}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                  value={formData.exercise}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, exercise: text }))}
                   placeholder="e.g., Bench Press"
                   placeholderTextColor="rgba(255, 255, 255, 0.4)"
                   autoFocus
