@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../constants/colors';
@@ -124,9 +125,66 @@ const getStudioWorkoutType = (workoutTitle: string): StudioWorkoutType => {
   return null;
 };
 
+interface StudioCardImageProps {
+  imageUri: string;
+  studioWorkoutType: StudioWorkoutType;
+  containerStyle: object;
+  imageStyle: object;
+  placeholderStyle: object;
+}
+
+const StudioCardImage: React.FC<StudioCardImageProps> = ({
+  imageUri,
+  studioWorkoutType,
+  containerStyle,
+  imageStyle,
+  placeholderStyle,
+}) => {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+
+  useEffect(() => {
+    setStatus(imageUri ? 'loading' : 'error');
+  }, [imageUri]);
+
+  const handleLoad = useCallback(() => setStatus('loaded'), []);
+  const handleError = useCallback(() => {
+    console.log('WorkoutDetailScreen - Studio image failed to load:', imageUri);
+    setStatus('error');
+  }, [imageUri]);
+
+  if (!imageUri || status === 'error') {
+    return (
+      <View style={[containerStyle, placeholderStyle]}>
+        <Icon2
+          name={studioWorkoutType === 'yoga' ? 'yoga' : 'human-handsup'}
+          size={40}
+          color={colors.offWhite}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={containerStyle}>
+      <Image
+        source={{ uri: imageUri }}
+        style={imageStyle}
+        resizeMode="cover"
+        onLoad={handleLoad}
+        onError={handleError}
+      />
+      {status === 'loading' && (
+        <View style={[StyleSheet.absoluteFill, placeholderStyle, styles.studioImageLoaderOverlay]}>
+          <ActivityIndicator size="small" color={colors.offWhite} />
+        </View>
+      )}
+    </View>
+  );
+};
+
 export const WorkoutDetailScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<WorkoutDetailRouteProp>();
   const { addExercise, removeExercise, updateExercise, getDayWorkout, isSaving, error: contextError } = useWorkout();
 
@@ -517,29 +575,24 @@ export const WorkoutDetailScreen: React.FC = () => {
                   style={styles.studioCard}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.studioImageContainer}>
-                    {studio.image_url ? (
-                      <Image 
-                        source={{ uri: studio.image_url }} 
-                        style={styles.studioImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.studioImagePlaceholder}>
-                        <Icon2 
-                          name={studioWorkoutType === 'yoga' ? 'yoga' : 'human-handsup'} 
-                          size={40} 
-                          color={colors.offWhite} 
-                        />
-                      </View>
-                    )}
-                  </View>
+                  <StudioCardImage
+                    imageUri={studio.image_url || ''}
+                    studioWorkoutType={studioWorkoutType}
+                    containerStyle={styles.studioImageContainer}
+                    imageStyle={styles.studioImage}
+                    placeholderStyle={styles.studioImagePlaceholder}
+                  />
                   <View style={styles.studioInfoContainer}>
                     <View style={styles.studioInfoLeft}>
                       <Text style={styles.studioName}>{studio.name}</Text>
                       <View style={styles.studioLocationBadge}>
-                        <Text style={styles.studioLocationText}>San Francisco</Text>
+                        <Text style={styles.studioLocationText}>
+                          {[studio.city, studio.location_pill].filter(Boolean).join('-') || 'San Francisco'}
+                        </Text>
                       </View>
+                      {studio.address ? (
+                        <Text style={styles.studioAddressText}>{studio.address}</Text>
+                      ) : null}
                     </View>
                     <TouchableOpacity 
                       style={styles.studioLinkButton}
@@ -1081,6 +1134,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  studioImageLoaderOverlay: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   studioInfoContainer: {
     backgroundColor: '#1a1a1a',
     paddingHorizontal: 11,
@@ -1116,6 +1173,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     fontSize: 12,
     color: colors.darkBrown,
+  },
+  studioAddressText: {
+    fontFamily: 'Roboto',
+    fontSize: 12,
+    color: colors.offWhite,
+    opacity: 0.8,
+    marginTop: 4,
   },
   studiosLoader: {
     marginVertical: 40,
