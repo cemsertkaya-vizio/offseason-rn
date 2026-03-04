@@ -3005,6 +3005,10 @@ PODS:
     - SocketRocket
     - Yoga
   - SocketRocket (0.7.1)
+  - terra-react (1.8.12):
+    - React-Core
+    - TerraiOS (= 1.6.31)
+  - TerraiOS (1.6.31)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -3097,11 +3101,13 @@ DEPENDENCIES:
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (~> 0.7.1)
+  - terra-react (from `../node_modules/terra-react`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
     - SocketRocket
+    - TerraiOS
 
 EXTERNAL SOURCES:
   boost:
@@ -3279,6 +3285,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-vector-icons"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
+  terra-react:
+    :path: "../node_modules/terra-react"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -3290,7 +3298,7 @@ SPEC CHECKSUMS:
   FBLazyVector: 309703e71d3f2f1ed7dc7889d58309c9d77a95a4
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
-  hermes-engine: 5bb43e77c21be9f34899ea2a54019125d24c1940
+  hermes-engine: 3a68b5238b1d80511c9bae8a2017179c4fd0da00
   RCT-Folly: 59ec0ac1f2f39672a0c6e6cecdd39383b764646f
   RCTDeprecation: a41bbdd9af30bf2e5715796b313e44ec43eefff1
   RCTRequired: 7be34aabb0b77c3cefe644528df0fa0afad4e4d0
@@ -3371,6 +3379,8 @@ SPEC CHECKSUMS:
   RNVectorIcons: 6acc19c833be864e9c70894e101a587fe491150a
   RNWorklets: 6c4441bf4c01fd1598099789264481d199d18968
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  terra-react: 88fe49e751ce2a88fc18fef04ac8cbff3176b044
+  TerraiOS: 46717daf06ddf876ff20fb74e1582a8dd43b5083
   Yoga: 5456bb010373068fc92221140921b09d126b116e
 
 PODFILE CHECKSUM: c4dc354ff5c9ca239a6d568ea1bb9dfdea33d854

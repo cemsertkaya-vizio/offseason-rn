@@ -35,6 +35,10 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Offseason needs access to your camera to take a profile picture.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Offseason reads your health data to track HRV, resting heart rate, sleep, and cycle data for your training program.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Offseason may write workout data to Apple Health.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -45,6 +49,11 @@
 	<array>
 		<string>MaterialIcons.ttf</string>
 		<string>MaterialCommunityIcons.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+		<string>fetch</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

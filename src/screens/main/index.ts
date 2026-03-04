@@ -8,3 +8,4 @@ export * from './WorkoutDetailScreen';
 export * from './EditLocationScreen';
 export * from './EditSummaryScreen';
 export * from './EditWorkoutDayScreen';
+export * from './WearableSetupScreen';

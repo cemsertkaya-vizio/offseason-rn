@@ -75,5 +75,6 @@ export type RootStackParamList = {
     day: string;
     dayWorkout: DayWorkout;
   };
+  WearableSetup: undefined;
 };
 

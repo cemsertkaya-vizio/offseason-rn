@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppLoadingScreen, HomeScreen, StartScreen, RegisterScreen, CoreProfileScreen, RegisterCoreProfileScreen, RegisterPhysicalInfoScreen, RegisterLocationScreen, RegisterPreferencesScreen, RegisterScheduleScreen, RegisterPreferredDaysScreen, RegisterGoalsScreen, RegisterGetStrongerScreen, RegisterGetStrongerDetailsScreen, RegisterGetFasterScreen, RegisterGetFasterDetailsScreen, RegisterGainMuscleScreen, RegisterGainMuscleDetailsScreen, RegisterLoseBodyFatScreen, RegisterLoseBodyFatDetailsScreen, RegisterTrainEventScreen, RegisterTrainEventDetailsScreen, RegisterTrainEventTrainingStatusScreen, RegisterTrainEventCurrentStatusScreen, RegisterPushMyselfScreen, RegisterSummaryReviewScreen } from '../screens';
 import { WeightliftingScreen, WeightliftingEquipmentScreen, WeightliftingMaxesScreen, SwimmingScreen, SwimmingStyleScreen, SwimmingExampleScreen, PilatesScreen, PilatesStudioScreen, YogaScreen, YogaStudioScreen, RunningScreen, RunningStyleScreen, RunningExampleScreen, RunningDistanceScreen, SportsScreen, SportsTypeScreen, WalkingScreen, WalkingDistanceScreen, OtherScreen, AnythingElseScreen } from '../screens/training';
-import { ReferFriendsScreen, AiChatScreen, WorkoutDetailScreen, EditLocationScreen, EditSummaryScreen, EditWorkoutDayScreen } from '../screens/main';
+import { ReferFriendsScreen, AiChatScreen, WorkoutDetailScreen, EditLocationScreen, EditSummaryScreen, EditWorkoutDayScreen, WearableSetupScreen } from '../screens/main';
 import { LoginScreen, VerifyOTPScreen } from '../screens/auth';
 import { RootStackParamList } from '../types/navigation';
 import { TabNavigator } from './TabNavigator';
@@ -78,6 +78,7 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="EditLocation" component={EditLocationScreen} />
       <Stack.Screen name="EditSummary" component={EditSummaryScreen} />
       <Stack.Screen name="EditWorkoutDay" component={EditWorkoutDayScreen} />
+      <Stack.Screen name="WearableSetup" component={WearableSetupScreen} />
     </Stack.Navigator>
   );
 };

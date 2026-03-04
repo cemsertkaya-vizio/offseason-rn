@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C80B921A6F3F58F76C31292 /* libPods-Offseason.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-Offseason.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		B545C11AEE6BE734D4D5EEA2 /* libPods-Offseason.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AAD521CBD1DBF934DC414C2 /* libPods-Offseason.a */; };
 		E0988E4C753880193B60F275 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		MAPKIT001A680F5B00A75B9A /* MapKitSearchCompleter.swift in Sources */ = {isa = PBXBuildFile; fileRef = MAPKIT002A680F5B00A75B9A /* MapKitSearchCompleter.swift */; };
 		MAPKIT003A680F5B00A75B9A /* MapKitSearchCompleter.m in Sources */ = {isa = PBXBuildFile; fileRef = MAPKIT004A680F5B00A75B9A /* MapKitSearchCompleter.m */; };
@@ -21,12 +21,13 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Offseason/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Offseason/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Offseason/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B4392A12AC88292D35C810B /* Pods-Offseason.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Offseason.debug.xcconfig"; path = "Target Support Files/Pods-Offseason/Pods-Offseason.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-Offseason.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Offseason.release.xcconfig"; path = "Target Support Files/Pods-Offseason/Pods-Offseason.release.xcconfig"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-Offseason.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Offseason.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4AAD521CBD1DBF934DC414C2 /* libPods-Offseason.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Offseason.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4EF7A5BF2F57612400AE9D82 /* Offseason.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Offseason.entitlements; path = Offseason/Offseason.entitlements; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Offseason/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Offseason/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		D19E0528D216FCF85ECA2FF9 /* Pods-Offseason.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Offseason.release.xcconfig"; path = "Target Support Files/Pods-Offseason/Pods-Offseason.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F88C38B09F8C05B835F967E9 /* Pods-Offseason.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Offseason.debug.xcconfig"; path = "Target Support Files/Pods-Offseason/Pods-Offseason.debug.xcconfig"; sourceTree = "<group>"; };
 		MAPKIT002A680F5B00A75B9A /* MapKitSearchCompleter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MapKitSearchCompleter.swift; path = Offseason/MapKitSearchCompleter.swift; sourceTree = "<group>"; };
 		MAPKIT004A680F5B00A75B9A /* MapKitSearchCompleter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = MapKitSearchCompleter.m; path = Offseason/MapKitSearchCompleter.m; sourceTree = "<group>"; };
 		MAPKIT005A680F5B00A75B9A /* Offseason-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Offseason-Bridging-Header.h"; path = "Offseason/Offseason-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,7 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-Offseason.a in Frameworks */,
+				B545C11AEE6BE734D4D5EEA2 /* libPods-Offseason.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +48,7 @@
 		13B07FAE1A68108700A75B9A /* Offseason */ = {
 			isa = PBXGroup;
 			children = (
+				4EF7A5BF2F57612400AE9D82 /* Offseason.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				MAPKIT002A680F5B00A75B9A /* MapKitSearchCompleter.swift */,
@@ -63,7 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-Offseason.a */,
+				4AAD521CBD1DBF934DC414C2 /* libPods-Offseason.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -100,8 +102,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-Offseason.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-Offseason.release.xcconfig */,
+				F88C38B09F8C05B835F967E9 /* Pods-Offseason.debug.xcconfig */,
+				D19E0528D216FCF85ECA2FF9 /* Pods-Offseason.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -113,13 +115,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Offseason" */;
 			buildPhases = (
-				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				687BA50B0EB9817485411C8D /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				6E1506090A4CAAC595E03D24 /* [CP] Embed Pods Frameworks */,
+				87550C974FE19249D76866CD /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -191,28 +193,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
 		};
-		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Offseason/Pods-Offseason-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Offseason/Pods-Offseason-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Offseason/Pods-Offseason-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
+		687BA50B0EB9817485411C8D /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -234,7 +215,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
+		6E1506090A4CAAC595E03D24 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Offseason/Pods-Offseason-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Offseason/Pods-Offseason-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Offseason/Pods-Offseason-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		87550C974FE19249D76866CD /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -273,10 +275,11 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-Offseason.debug.xcconfig */;
+			baseConfigurationReference = F88C38B09F8C05B835F967E9 /* Pods-Offseason.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Offseason/Offseason.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3SP8XS39C8;
 				ENABLE_BITCODE = NO;
@@ -309,10 +312,11 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-Offseason.release.xcconfig */;
+			baseConfigurationReference = D19E0528D216FCF85ECA2FF9 /* Pods-Offseason.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = Offseason/Offseason.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3SP8XS39C8;
 				INFOPLIST_FILE = Offseason/Info.plist;

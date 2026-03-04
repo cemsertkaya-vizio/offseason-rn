@@ -1,0 +1,432 @@
+﻿Wearable Data PRD (v2)
+Background
+Offseason’s vision is to take a user’s wearable data as an input to plan and optimize their ideal wellness routine.
+Our Emerging Principal: It’s important for us not to re-invent the data wheel, but build the car.
+We will be using the Terra API to push wearable data into our app continuously, when it is available. A user will be able to see their wearable data in Offseason, and how it alters their routine. Terra API gives us historical data (even before a user signs up for Offseason), so we can bring in as much historical context as possible. 
+Wearable Data Points We Care About
+
+
+These variables should be consistently monitored through weeks of following a consistent training program. Sharp differences or drops from the “norm” aren’t necessarily indicators for an immediate lifestyle change - but consistent recording of high ranges would be more beneficial to prompt a behavior/ lifestyle change. 
+
+*Note: RHR remains fairly constant through adulthood but can be affected by lifestyle changes such as improving cardiovascular health, managing stress. HRV tends to decline naturally with age. What “low” or “high” means is going to be subjective to the individual, however we can operate on the demographic mean.
+
+
+* HRV:
+   * High HRV = good stress management, Low HRV = bad stress management
+   * Low HRV can also be just a woman in her luteal phase 
+* RHR:  
+   * low RHR = better conditioned, indicative of good-superior levels of cardiorespiratory fitness
+   * high RHR = not as great conditioned, indicative of fair-very poor levels of cardiorespiratory fitness
+* Sleep
+   * Low consistency
+   * High consistency
+
+
+* Cycle Data: (cycle, predicted ovulation, predicted period)
+
+
+Datapoints & Their Influence on Workouts
+HRV
+	RHR
+	Sleep Consistency
+	Cycle
+	Meaning
+	Action
+	Low
+	High
+	Low
+	Luteal
+	
+
+	
+
+	Low
+	Normal
+	Low
+	Follicular 
+	With a low HRV (stressed), a normal resting heart rate, and low sleep consistency (unrested) one can assume the body is operating fine, but is showing signs of stress or overtraining. High intensity workouts with not enough recovery (poor sleep/ nutrition). 
+
+Follicular phase is associated with higher levels in strength, power, and energy due to decreased levels of progesterone and increased levels of estrogen. This is likely more about the lifter's emotional response to hormonal changes, rather than genuine neurological and physiological changes. This is an optimal time for rest, or to induce high levels of recovery, depending on contextual factors surrounding users plan and previous training weeks.
+	I would emphasize recovery within the next few days, with the option to still train hard on the day of reading data. RHR is still in a normal range which means the cardiovascular system is still working efficiently, Low HRV indicates poor recovery.
+
+If this is a “new data point” of a new training cycle, it could be an early signal of overtraining for the plan, and the user may need adjusting to workout volume until Recovery metrics look good and progress is still being made.
+
+Users in the follicular phase would typically feel more energy - making this an ideal time for HIIT, Strength training, or higher intensity workouts. It is also a great time to promote recovery sessions (the “locked in training”)
+	
+
+	
+
+	
+
+	Ovulation
+	
+
+	
+
+	
+
+	
+
+	
+
+	Menstrual
+	
+
+	
+
+	Low
+	Low
+	Low
+	
+
+	Sympathetic “fight or flight” nervous system is active, cardiorespiratory system still working fine.
+
+Could mean a very well trained athlete with a lot of recovery needed, or a overly trained/ stressed person
+	* Could be excellence, could be fatigue. How does the athlete “feel”?
+        Feels great: keep on training
+Feels tired: probably over trained, start working on recovery protocols.
+
+
+	Low
+	Low
+	Normal
+	
+
+	
+
+	
+
+	Low
+	Low
+	High
+	
+
+	
+
+	
+
+	Low
+	Normal
+	Low
+	
+
+	
+
+	
+
+	Low
+	Normal
+	Normal
+	
+
+	
+
+	
+
+	Low
+	Normal
+	High
+	
+
+	
+
+	
+
+	Low
+	High
+	Low
+	
+
+	
+
+	
+
+	Low
+	High
+	Normal
+	
+
+	
+
+	
+
+	Low
+	High
+	High
+	
+
+	
+
+	
+
+	Normal
+	Low
+	Low
+	
+
+	
+
+	
+
+	Normal
+	Low
+	Normal
+	
+
+	
+
+	
+
+	Normal
+	Low
+	High
+	
+
+	
+
+	
+
+	Normal
+	Normal
+	Low
+	
+
+	
+
+	
+
+	Normal
+	Normal
+	Normal
+	Homeostasis
+	Body is responding well the the training system
+	stay the course and continue to progress
+	Normal
+	Normal
+	High
+	
+
+	
+
+	
+
+	Normal
+	High
+	Low
+	
+
+	
+
+	
+
+	Normal
+	High
+	Normal
+	
+
+	
+
+	
+
+	Normal
+	High
+	High
+	
+
+	
+
+	
+
+	High
+	Low
+	Low
+	
+
+	
+
+	
+
+	High
+	Low
+	Normal
+	
+
+	
+
+	
+
+	High
+	Low
+	High
+	
+
+	
+
+	
+
+	High
+	Normal
+	Low
+	
+
+	
+
+	
+
+	High
+	Normal
+	Normal
+	
+
+	
+
+	
+
+	High
+	Normal
+	High
+	
+
+	
+
+	
+
+	High
+	High
+	Low
+	
+
+	
+
+	
+
+	High
+	High
+	Normal
+	
+
+	
+
+	
+
+	High
+	High
+	High
+	High stress, unable to keep up with training and recovery
+	
+
+	
+
+	27 different permutations of 3 categories of 3 different data points
+Many of the permutations are redundant and will elicit the same answer or response
+Similar to our Archetypes for training, we can create answers that encompass many similar scenarios with nominal differences
+Green Light Scenarios
+Normal or High HRV / Normal or Low RHR
+Meaning: These are redundant because they all signal that the Parasympathetic nervous system (rest and digest) is either dominant or well-balanced.
+Action: Whether Sleep is High, Normal, or Low on a single day in this zone, the coaching action remains "Proceed with Plan." If Sleep is Low, it's a warning to watch tomorrow's data, but today is a "Go.”
+Sympathetic Stress Scenarios
+Low HRV / Low RHR / Low, normal, or high sleep
+Meaning: interesting situation, low HRV is usually paired with High RHR. Client is either a.) very fit and well rested, low stress and doing well or b.) so overtrained that they are signaling poor recovery (the more common outcome)
+Action: Ask the client if they are showing symptoms of fatigue or overtraining, recommend that client focus on activities to reduce sympathetic stress (breathwork, prioritize sleep, limit caffeine consumption if any, nature walks, etc.)  
+Acute Stress Scenarios
+Low HRV / Normal RHR / Any Sleep
+Meaning: Likely caused by an intense workout session, double down on nutrition, consistent quality sleep, hydration, and monitor over the next few days.
+
+Action:
+Red Zone Scenarios
+Low HRV / High RHR / Any sleep
+Meaning: Textbook expression of poor response to stress or a signal of accumulated fatigue. Could be illness, overtraining, mental stress, poor sleep, etc.
+
+Action: Immediate training deloads or rest
+Recovery Delays
+High HRV / High RHR / Any sleep
+Meaning: Typically happens after intense HIIT sessions or Poor sleep where the heart is working hard and the nervous system is trying to bounce back
+
+Action: A more technical recovery day, not broken but not primed (Foam rolling, sauna, active recovery, lighter work, alleviate soreness without further strain, promote bloodflow/ recovery, purposeful gentle movement, yoga, stretching,
+
+
+Defining Low, Normal, and High Data Points
+What is considered low HRV/High HRV/Normal HRV?
+This is going to vary depending on each user, the more data collected and tracked the more accurate a data point we get. This is the most accurate representation of “high” or “low”.
+
+Averages change depending on the person's demographics (Age, weight, gender, etc.) but ranges can be large.
+Age :  ms
+18-25: 60-90
+26-35: 55-80
+36-45: 50-70
+46-55: 45-65
+56-65: 40-60
+66-75: 35-55
+
+
+Is it based on your physiology (ie. your height, weight, age?)
+        Genetics and Age are the biggest factors, with some things such as race, BMI, or environmental factors also being correlated
+Proposed addition of a Perceived Readiness score to be “cleared for Hrad training”: If biomarkers say train but the users feeling fatigued, or if biomarkers sayrest but the user feels great, adjust or continue plan accordingly
+Product Requirements
+#
+	Requirement Name
+	Details
+	Priority
+	0.0
+	Saving Data for Future Reference
+	We should save user data in a way that is secure and over the entire lifecycle of a user--before the user joined Offseason (for internal analytics on success and incase we need that data for a new feature)
+   1. This data should also be able to be accessed by a user if they email us--as per our data policy
+	P0
+	1.1
+	Quick Action Dash
+	At the top of a week of workouts, a user can see a snapshot of their metrics within Offseason. Including:
+   1. HRV
+   2. RHR
+   3. Sleep Consistency
+   4. Cycle
+	P0
+	1.2
+	Metric Takeaways
+	In order to provide a user with the quickest understanding of their datapoints, we will mark their datapoints as:
+   1. Good = green
+   2. Needs work (1-2x bad) = yellow
+   3. Needs work (more than 3x in a row) = orange
+	P0
+	1.3
+	Clicking Quick Action Dash
+	If a user clicks on a metric on their Quick Action Dash, they will be taken to the Analytics Page where they can view their Trend data points (bookmarked on which they clicked on).
+	P1
+	2.1
+	Analytics Page
+	In the analytics page, a user can view their Offseason metrics over the past week, in a trend graph.
+
+If a user clicks backward, they can see their data for the lifecycle of their wearable (from Terra API)
+	P1
+	3.1
+	Intervention: Schedule Change
+	If a user’s metric is orange, we should change their routine based on the recommendation to intervene.
+   1. The changed routine should glow green, so a user knows that this change is important to get them back to a healthy level.
+	P0
+	3.2
+	Intervention: Chat Proactivity
+	If a user’s metric is orange, we should chat them proactively and tell them what we are changing in their routine, and why.
+	P0
+	4.1
+	No Data Collected (missed day of wearing wearable)
+	Remind user to wear their wearable via proactive chat
+
+Don’t change plan
+	P2
+	4.2
+	Null Data (user never had wearable)
+	If a user hasn’t connected their wearable, their metric dashboard should have null values, and we should push them to connect their wearable.
+	P0
+	
+
+Sources
+
+
+Graveyard
+   * For plan shifts according to data…
+   * When a user is trending either bad or good on a metric, how might we show this in the UI and adjust a plan accordingly…
+   * Show in dashboard that they are trending bad/good (when a user goes outside of a healthy range, we can trigger a change in their plan)
+   * HRV is trending low (bad); HRV is trending high (good)
+   * RHR is trending high (bad); RHR is trending low (good)
+   * Sleep trend is inconsistent (bad); sleep trend is consistent (good)
+   * Always adjust at least one day out (never day-of for now)
+   * Banner for “we made some changes…”

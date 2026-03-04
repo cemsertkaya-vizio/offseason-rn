@@ -22,18 +22,13 @@ import { colors } from '../../constants/colors';
 import { authService } from '../../services/authService';
 import { profileService } from '../../services/profileService';
 import { storageService } from '../../services/storageService';
+import { wearableDataService } from '../../services/wearableDataService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import { RootStackParamList } from '../../types/navigation';
+import type { WearableConnectionRow } from '../../types/wearable';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-interface WearableDevice {
-  id: string;
-  name: string;
-  type: 'apple_watch' | 'oura_ring';
-  isConnected: boolean;
-}
 
 export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -42,18 +37,22 @@ export const ProfileScreen: React.FC = () => {
   const { profile, refreshProfile } = useProfile();
 
   const [showPhotoActionSheet, setShowPhotoActionSheet] = useState(false);
-  const [showWearableSheet, setShowWearableSheet] = useState(false);
-  const [isEditingWearable, setIsEditingWearable] = useState(false);
-  const [connectedDevices, setConnectedDevices] = useState<WearableDevice[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [wearableConnection, setWearableConnection] =
+    useState<WearableConnectionRow | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       console.log('ProfileScreen - Screen focused, refreshing profile');
       refreshProfile();
-    }, [refreshProfile])
+      if (user?.id) {
+        wearableDataService
+          .getActiveConnection(user.id)
+          .then(result => {
+            setWearableConnection(result.connection ?? null);
+          });
+      }
+    }, [refreshProfile, user?.id])
   );
 
   const fullName = profile
@@ -211,53 +210,13 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const handleEditWearable = () => {
-    Alert.alert(
-      'Coming Soon',
-      'Wearable integration is currently under development. Stay tuned!',
-      [{ text: 'OK' }]
-    );
+    console.log('ProfileScreen - Navigating to WearableSetup');
+    navigation.navigate('WearableSetup');
   };
 
   const handleConnectNewDevice = () => {
-    Alert.alert(
-      'Coming Soon',
-      'Wearable integration is currently under development. Stay tuned!',
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handleConnectDevice = async (deviceType: 'apple_watch' | 'oura_ring') => {
-    setIsConnecting(true);
-    console.log('ProfileScreen - Connecting device:', deviceType);
-
-    // Simulate connection process
-    setTimeout(() => {
-      const newDevice: WearableDevice = {
-        id: `${deviceType}-${Date.now()}`,
-        name:
-          deviceType === 'apple_watch'
-            ? `${profile?.first_name}'s Apple Watch`
-            : `${profile?.first_name}'s Oura Ring`,
-        type: deviceType,
-        isConnected: true,
-      };
-
-      setConnectedDevices((prev) => [...prev, newDevice]);
-      setIsConnecting(false);
-      setShowWearableSheet(false);
-
-      Alert.alert('Success', `${newDevice.name} connected successfully!`);
-    }, 1500);
-  };
-
-  const handleSaveWearableSelection = () => {
-    setIsEditingWearable(false);
-    console.log('ProfileScreen - Wearable selection saved:', selectedDeviceId);
-  };
-
-  const handleCancelWearableEdit = () => {
-    setIsEditingWearable(false);
-    setSelectedDeviceId(null);
+    console.log('ProfileScreen - Navigating to WearableSetup');
+    navigation.navigate('WearableSetup');
   };
 
   const renderProfileSummaryText = () => {
@@ -384,61 +343,20 @@ export const ProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {isEditingWearable ? (
-              <View style={styles.wearableEditContainer}>
-                {connectedDevices.map((device) => (
-                  <TouchableOpacity
-                    key={device.id}
-                    style={styles.wearableSelectItem}
-                    onPress={() => setSelectedDeviceId(device.id)}
-                  >
-                    <Text
-                      style={[
-                        styles.wearableItemText,
-                        selectedDeviceId === device.id &&
-                          styles.wearableItemTextSelected,
-                      ]}
-                    >
-                      {device.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity onPress={handleConnectNewDevice}>
-                  <Text style={styles.connectNewDeviceText}>
-                    Connect new device
-                  </Text>
-                </TouchableOpacity>
-                <View style={styles.wearableButtonRow}>
-                  <TouchableOpacity
-                    style={styles.saveButton}
-                    onPress={handleSaveWearableSelection}
-                  >
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={handleCancelWearableEdit}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+            {wearableConnection ? (
+              <Text style={styles.sectionValue}>
+                {wearableConnection.provider === 'APPLE_HEALTH'
+                  ? 'Apple Health'
+                  : wearableConnection.provider === 'HEALTH_CONNECT'
+                    ? 'Health Connect'
+                    : 'Samsung Health'}
+              </Text>
             ) : (
-              <View>
-                {connectedDevices.length > 0 ? (
-                  connectedDevices.map((device) => (
-                    <Text key={device.id} style={styles.sectionValue}>
-                      {device.name}
-                    </Text>
-                  ))
-                ) : (
-                  <TouchableOpacity onPress={handleConnectNewDevice}>
-                    <Text style={styles.connectNewDeviceText}>
-                      Connect new device
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              <TouchableOpacity onPress={handleConnectNewDevice}>
+                <Text style={styles.connectNewDeviceText}>
+                  Connect a device
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -500,46 +418,6 @@ export const ProfileScreen: React.FC = () => {
         </View>
       </Modal>
 
-      <Modal
-        visible={showWearableSheet}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowWearableSheet(false)}
-      >
-        <View style={styles.wearableModalContainer}>
-          <TouchableOpacity
-            style={styles.wearableModalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowWearableSheet(false)}
-          />
-          <View style={[styles.wearableSheetContainer, { bottom: 71 }]}>
-            <View style={styles.wearableSheetHandle} />
-            <Text style={styles.wearableSheetTitle}>Connect new device</Text>
-
-            {isConnecting ? (
-              <View style={styles.connectingContainer}>
-                <ActivityIndicator size="large" color={colors.yellow} />
-                <Text style={styles.connectingText}>Connecting...</Text>
-              </View>
-            ) : (
-              <View style={styles.wearableOptions}>
-                <TouchableOpacity
-                  style={styles.wearableOptionButton}
-                  onPress={() => handleConnectDevice('apple_watch')}
-                >
-                  <Text style={styles.wearableOptionText}>Apple Watch</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.wearableOptionButton}
-                  onPress={() => handleConnectDevice('oura_ring')}
-                >
-                  <Text style={styles.wearableOptionText}>Oura Ring</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -658,64 +536,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.offWhite,
   },
-  wearableEditContainer: {
-    marginTop: 8,
-  },
-  wearableSelectItem: {
-    paddingVertical: 8,
-  },
-  wearableItemText: {
-    fontFamily: 'Roboto',
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.offWhite,
-    lineHeight: 19,
-  },
-  wearableItemTextSelected: {
-    color: colors.yellow,
-  },
   connectNewDeviceText: {
     fontFamily: 'Roboto',
     fontSize: 16,
     fontStyle: 'italic',
     color: colors.gray.muted,
     marginTop: 8,
-  },
-  wearableButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 16,
-  },
-  saveButton: {
-    backgroundColor: colors.yellow,
-    borderWidth: 1,
-    borderColor: colors.darkBrown,
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    borderRadius: 8,
-    minWidth: 107,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    fontFamily: 'Roboto',
-    fontSize: 12,
-    color: colors.darkBrown,
-  },
-  cancelButton: {
-    backgroundColor: colors.gray.muted,
-    borderWidth: 1,
-    borderColor: colors.darkBrown,
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    borderRadius: 8,
-    minWidth: 107,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontFamily: 'Roboto',
-    fontSize: 12,
-    color: colors.darkBrown,
   },
   signOutButton: {
     flexDirection: 'row',
@@ -789,73 +615,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#007AFF',
     textAlign: 'center',
-  },
-  wearableModalContainer: {
-    flex: 1,
-  },
-  wearableModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  },
-  wearableSheetContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    backgroundColor: '#1A1A1A',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colors.offWhite,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-  },
-  wearableSheetHandle: {
-    width: 31,
-    height: 4,
-    backgroundColor: colors.offWhite,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  wearableSheetTitle: {
-    fontFamily: 'Bebas Neue',
-    fontSize: 16,
-    color: colors.offWhite,
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 26,
-    textTransform: 'uppercase',
-  },
-  wearableOptions: {
-    alignItems: 'center',
-    gap: 12,
-  },
-  wearableOptionButton: {
-    backgroundColor: colors.yellow,
-    borderWidth: 1,
-    borderColor: colors.darkBrown,
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    borderRadius: 8,
-    minWidth: 107,
-    alignItems: 'center',
-  },
-  wearableOptionText: {
-    fontFamily: 'Roboto',
-    fontSize: 12,
-    color: colors.darkBrown,
-  },
-  connectingContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  connectingText: {
-    fontFamily: 'Roboto',
-    fontSize: 14,
-    color: colors.offWhite,
-    marginTop: 12,
   },
 });
