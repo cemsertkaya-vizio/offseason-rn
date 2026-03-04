@@ -4,6 +4,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import { profileService } from '../services/profileService';
 import { navigationService } from '../services/navigationService';
+import { wearableDataService } from '../services/wearableDataService';
+import { wearableSyncService } from '../services/wearableSyncService';
+import { terraService } from '../services/terraService';
 import { RootStackParamList } from '../types/navigation';
 import { colors } from '../constants/colors';
 
@@ -15,6 +18,26 @@ type AppLoadingScreenNavigationProp = NativeStackNavigationProp<
 interface AppLoadingScreenProps {
   navigation: AppLoadingScreenNavigationProp;
 }
+
+const syncWearableData = async (userId: string) => {
+  try {
+    const result = await wearableDataService.getActiveConnection(userId);
+    if (!result.success || !result.connection) {
+      return;
+    }
+
+    console.log('AppLoadingScreen - Auto-syncing wearable data');
+    const provider = result.connection.provider;
+
+    // Initialize Terra SDK before fetching
+    await terraService.initialize(userId);
+
+    await wearableSyncService.syncToday(userId, provider);
+    console.log('AppLoadingScreen - Auto-sync complete');
+  } catch (error) {
+    console.log('AppLoadingScreen - Auto-sync error:', error);
+  }
+};
 
 export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ navigation }) => {
   const { user, isLoading } = useAuth();
@@ -52,6 +75,11 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ navigation }
         } else {
           console.log('AppLoadingScreen - Error fetching profile:', result.error);
         }
+      }
+
+      // Background wearable sync (non-blocking)
+      if (user) {
+        syncWearableData(user.id);
       }
 
       const initialRoute = await navigationService.determineInitialRoute(user, profile);
