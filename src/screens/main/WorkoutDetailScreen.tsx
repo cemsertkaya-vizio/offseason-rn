@@ -112,6 +112,13 @@ const initialFormData: ExerciseFormData = {
 
 type EditMode = 'add' | 'weight' | 'sets' | 'reps' | null;
 
+const CARDIO_KEYWORDS = ['run', 'walk', 'swim', 'hik', 'cardio', 'jog', 'sprint', 'cycling', 'bike'];
+
+const isCardioWorkout = (workoutTitle: string): boolean => {
+  const title = workoutTitle.toLowerCase();
+  return CARDIO_KEYWORDS.some(keyword => title.includes(keyword));
+};
+
 type StudioWorkoutType = 'yoga' | 'pilates' | null;
 
 const getStudioWorkoutType = (workoutTitle: string): StudioWorkoutType => {
@@ -203,6 +210,7 @@ export const WorkoutDetailScreen: React.FC = () => {
   const [isLoadingMedia, setIsLoadingMedia] = useState(true);
 
   const studioWorkoutType = getStudioWorkoutType(workoutTitle);
+  const isCardio = isCardioWorkout(workoutTitle);
 
   const refreshExercises = useCallback(() => {
     const dayWorkout = getDayWorkout(day);
@@ -522,7 +530,7 @@ export const WorkoutDetailScreen: React.FC = () => {
           <Text style={styles.title}>{workoutTitle.toUpperCase()}</Text>
         </View>
 
-        {!studioWorkoutType && (
+        {!studioWorkoutType && !isCardio && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={handleAddExercise}
@@ -531,7 +539,7 @@ export const WorkoutDetailScreen: React.FC = () => {
             <Icon name="add" size={24} color={colors.offWhite} />
           </TouchableOpacity>
         )}
-        {studioWorkoutType && <View style={styles.addButton} />}
+        {(studioWorkoutType || isCardio) && <View style={styles.addButton} />}
       </View>
 
       <View style={styles.metaContainer}>
@@ -552,7 +560,7 @@ export const WorkoutDetailScreen: React.FC = () => {
         )}
       </View>
 
-      {workoutGoal && !studioWorkoutType && (
+      {workoutGoal && !studioWorkoutType && !isCardio && (
         <View style={styles.goalContainer}>
           <Text style={styles.goalLabel}>GOAL</Text>
           <Text style={styles.goalText}>{workoutGoal}</Text>
@@ -610,7 +618,19 @@ export const WorkoutDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {!studioWorkoutType && isRestDay && exercises.length === 0 && (
+        {!studioWorkoutType && isCardio && (
+          <View style={styles.cardioDescriptionContainer}>
+            {workoutGoal ? (
+              <Text style={styles.cardioDescriptionText}>{workoutGoal}</Text>
+            ) : (
+              <Text style={styles.cardioDescriptionText}>
+                {workoutTitle}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {!studioWorkoutType && !isCardio && isRestDay && exercises.length === 0 && (
           <View style={styles.emptyContainer}>
             <Icon2 name="sleep" size={48} color={colors.offWhite} />
             <Text style={styles.emptyText}>Rest Day</Text>
@@ -618,7 +638,7 @@ export const WorkoutDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {!studioWorkoutType && !isRestDay && exercises.length === 0 && (
+        {!studioWorkoutType && !isCardio && !isRestDay && exercises.length === 0 && (
           <View style={styles.emptyWorkoutContainer}>
             {dayWorkout?.priorities && dayWorkout.priorities.length > 0 && (
               <View style={styles.detailSection}>
@@ -642,13 +662,13 @@ export const WorkoutDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {!studioWorkoutType && exercises.length > 0 && isLoadingMedia && (
+        {!studioWorkoutType && !isCardio && exercises.length > 0 && isLoadingMedia && (
           <View style={styles.exercisesLoaderContainer}>
             <ActivityIndicator size="large" color={colors.offWhite} />
           </View>
         )}
 
-        {!studioWorkoutType && exercises.length > 0 && !isLoadingMedia && (
+        {!studioWorkoutType && !isCardio && exercises.length > 0 && !isLoadingMedia && (
           exercises.map((exercise, index) => {
             const getActiveAction = () => {
               if (editingIndex !== index || !isModalVisible) return null;
@@ -1106,6 +1126,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Bebas Neue',
     fontSize: 18,
     color: colors.darkBrown,
+  },
+  cardioDescriptionContainer: {
+    paddingHorizontal: 35,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  cardioDescriptionText: {
+    fontFamily: 'Roboto',
+    fontSize: 16,
+    color: colors.offWhite,
+    lineHeight: 24,
   },
   studiosSection: {
     paddingHorizontal: 38,
